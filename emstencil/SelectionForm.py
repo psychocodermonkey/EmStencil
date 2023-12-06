@@ -234,6 +234,7 @@ class TemplateSelector(QWidget):
 
   def exitClicked(self) -> None:
     """Close the form/application by triggering close from the parent."""
+    # TODO: This should call the parent close method just as the menu bar exit does.
     logging.info('Application close.')
     self.close()
   #   self.parent.close()

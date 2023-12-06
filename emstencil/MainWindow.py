@@ -21,6 +21,11 @@
 '''
 # TODO: Imeplement this as the main form so we can add a menu bar for managing the DB.
 # TODO: Write this to launch other windows etc for C.R.U.D.
+# TODO: Add menu bar to form.
+# TODO: Menu bar should contain:
+#         File> Open | Save | Import | Exit Edit>
+#         Edit> Template?
+#         Help> Instructions | About
 
 from PyQt6.QtWidgets import QMainWindow
 # from PyQt6.QtGui import QKeySequence, QShortcut
@@ -42,4 +47,5 @@ class EmStencil(QMainWindow):
 
   def closeWindow(self) -> None:
     """Close the window."""
+    # TODO: Figure out why this is not visible in parent/child relationship with widget.
     self.close()
