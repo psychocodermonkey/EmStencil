@@ -161,11 +161,12 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 
-# Exclude development testing files from repo
-*.db
-*.xlsx !ex_templates.xlsx
-*_dev.txt
-
 # OS Files to exclude
 .DS_Store
 Desktop.ini
+
+# Exclude development testing files from repo
+*.db
+*_dev.txt
+*.xlsx
+!ex_templates.xlsx
