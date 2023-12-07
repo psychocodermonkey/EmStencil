@@ -30,11 +30,19 @@ from sxl import Workbook
 # Setup the arg parser to import and parse arguments.
 parser = argparse.ArgumentParser()
 
+
+parser.add_argument(
+  "--ddl", "-s",
+  default='data/templates.sql',
+  required=False,
+  help="Specify path for ddl file to build the bdatabase."
+)
+
 parser.add_argument(
   "--database", "-d",
   default='data/templates.db',
   required=False,
-  help="Specify path for database to build."
+  help="Specify path for database file."
 )
 
 parser.add_argument(
@@ -60,7 +68,7 @@ def main():
   """ Main - Xlate the spreadsheet into an object to be able to manipulate """
   # Create the SQLite3 database from the DDL definition.
   dbCursor = database.cursor()
-  with open('data/templates.sql') as fp:
+  with open(args.ddl) as fp:
     dbCursor.executescript(fp.read())
 
   # Convert the spreadsheet into the SQLite3 database.
@@ -106,7 +114,7 @@ def convertSpreadsheet(Spreadsheet: dict) -> None:
   colName = lambda n: '' if n <= 0 else colName((n - 1) // 26) + chr((n - 1) % 26 + ord('A'))  # noqa: E731
 
   # Delete all values from all tables.
-  clearTables()
+  # clearTables()
 
   # Sheet can be the sheet name or the sheet # (ex: wb.sheets[1]).
   ws = Workbook(Spreadsheet['name']).sheets[Spreadsheet['sheet']]
@@ -149,7 +157,8 @@ def convertSpreadsheet(Spreadsheet: dict) -> None:
 
 def clearTables() -> None:
   """ Delete all values from all tables before reconverting.
-      Helpful for re-converting the data when the spreadsheet is updated. """
+      Helpful for re-converting the data when the spreadsheet is updated.
+      Currently this is un-used since this rebuilds the DB from ddl every time."""
   cursor = database.cursor()
   cursor.execute("delete from templateTags")
   cursor.execute("delete from tags")
