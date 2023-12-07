@@ -20,19 +20,38 @@
 ........1.........2.........3.........4.........5.........6.........7.........8.........9.........0.........1.........2.........3..
 '''
 
+import argparse
 import sqlite3
 from dataclasses import dataclass, field
 from sxl import Workbook
 
 
 # Global
+# Setup the arg parser to import and parse arguments.
+parser = argparse.ArgumentParser()
+
+parser.add_argument(
+  "--database", "-d",
+  default='data/templates.db',
+  required=False,
+  help="Specify path for database to build."
+)
+
+parser.add_argument(
+  "--xls", "-x",
+  default="data/ex_templates.xlsx",
+  help="Location for templates in xlsx format to add to convert to database."
+)
+
+args = parser.parse_args()
+
 # Define connection to database
 # TODO: Once TemplateDB object has write/add functionality need to re-write this module.
-database = sqlite3.connect('data/templates.db')
+database = sqlite3.connect(args.database)
 
 # constants - Define names for thigs we want to make easily modifiable
 Spreadsheet = {
-  'name' : 'data/ex_templates.xlsx',            # Can also be workbook path if it needs to be
+  'name' : args.xls,            # Can also be workbook path if it needs to be
   'sheet' : 'Sheet1',                           # Can be sheet name or number (non-zero based)
   'hasColHdg' : True,                           # Does the spreadsheet have column headings?
 }
