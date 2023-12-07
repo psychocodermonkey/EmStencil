@@ -1,0 +1,31 @@
+[build-system]
+requires = [
+  "setuptools >= 65.6.0",
+  "wheel",
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "EmStencil"
+version = "2023.12.06"
+dependencies = [
+  "pyodbc==5.0.1",
+  "PyQt6==6.6.0",
+  "PyQt6-Qt6==6.6.0",
+  "PyQt6-sip==13.6.0",
+  "sxl==0.0.1a10"
+]
+requires-python = ">= 3.11"
+authors = [
+  {name = "Andrew Dixon", email = "PsychoCoderMonkey@gmail.com"}
+]
+maintainers = [
+  {name = "Andrew Dixon", email = "PsychoCoderMonkey@gmail.com"}
+]
+description = "Generator for filling in data for email templates."
+readme = {file = "README.md", content-type = "text/markdown"}
+license = { file = "LICENSE" }
+keywords = ["email", "template", "generator"]
+
+[project.gui-scripts]
+EmStencil-gui = "emstencil:main"
