@@ -20,19 +20,46 @@
 ........1.........2.........3.........4.........5.........6.........7.........8.........9.........0.........1.........2.........3..
 '''
 
+import argparse
 import sqlite3
 from dataclasses import dataclass, field
 from sxl import Workbook
 
 
 # Global
+# Setup the arg parser to import and parse arguments.
+parser = argparse.ArgumentParser()
+
+
+parser.add_argument(
+  "--ddl", "-s",
+  default='data/templates.sql',
+  required=False,
+  help="Specify path for ddl file to build the bdatabase."
+)
+
+parser.add_argument(
+  "--database", "-d",
+  default='data/templates.db',
+  required=False,
+  help="Specify path for database file."
+)
+
+parser.add_argument(
+  "--xls", "-x",
+  default="data/ex_templates.xlsx",
+  help="Location for templates in xlsx format to add to convert to database."
+)
+
+args = parser.parse_args()
+
 # Define connection to database
 # TODO: Once TemplateDB object has write/add functionality need to re-write this module.
-database = sqlite3.connect('data/templates.db')
+database = sqlite3.connect(args.database)
 
 # constants - Define names for thigs we want to make easily modifiable
 Spreadsheet = {
-  'name' : 'data/ex_templates.xlsx',            # Can also be workbook path if it needs to be
+  'name' : args.xls,            # Can also be workbook path if it needs to be
   'sheet' : 'Sheet1',                           # Can be sheet name or number (non-zero based)
   'hasColHdg' : True,                           # Does the spreadsheet have column headings?
 }
@@ -41,7 +68,7 @@ def main():
   """ Main - Xlate the spreadsheet into an object to be able to manipulate """
   # Create the SQLite3 database from the DDL definition.
   dbCursor = database.cursor()
-  with open('data/templates.sql') as fp:
+  with open(args.ddl) as fp:
     dbCursor.executescript(fp.read())
 
   # Convert the spreadsheet into the SQLite3 database.
@@ -87,7 +114,7 @@ def convertSpreadsheet(Spreadsheet: dict) -> None:
   colName = lambda n: '' if n <= 0 else colName((n - 1) // 26) + chr((n - 1) % 26 + ord('A'))  # noqa: E731
 
   # Delete all values from all tables.
-  clearTables()
+  # clearTables()
 
   # Sheet can be the sheet name or the sheet # (ex: wb.sheets[1]).
   ws = Workbook(Spreadsheet['name']).sheets[Spreadsheet['sheet']]
@@ -130,7 +157,8 @@ def convertSpreadsheet(Spreadsheet: dict) -> None:
 
 def clearTables() -> None:
   """ Delete all values from all tables before reconverting.
-      Helpful for re-converting the data when the spreadsheet is updated. """
+      Helpful for re-converting the data when the spreadsheet is updated.
+      Currently this is un-used since this rebuilds the DB from ddl every time."""
   cursor = database.cursor()
   cursor.execute("delete from templateTags")
   cursor.execute("delete from tags")
