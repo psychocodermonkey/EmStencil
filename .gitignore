@@ -169,4 +169,4 @@ Desktop.ini
 *.db
 *_dev.txt
 *.xlsx
-!ex_templates.xlsx
+!templates.xlsx
