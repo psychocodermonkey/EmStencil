@@ -2,7 +2,7 @@
 EmStencil is a templated email generator. Email templates are stored with place holder fields denoted by fields tagged in the format "${field}". The application scans the text provided for these tags and generates a form to fill in the data to be substituted in the email.
 
 ## Setup
-The initial templates can be loaded by the setup.py from a spreadsheet located in the data folder. The columns in the spreadsheet are converted into the database as the template title, template content, and the categories for the template. The categories are converted from the spreadsheet as a comma separated list. Spaces may be used in the between words in the categories column.
+The initial templates can be loaded by the sonvert_spreadsheet.py from a spreadsheet located in the data folder. The columns in the spreadsheet are converted into the database as the template title, template content, and the categories for the template. The categories are converted from the spreadsheet as a comma separated list. Spaces may be used in the between words in the categories column.
 
 There is no need to include a category for "all" as this is handled by the application to show all results. Adding an "all" key word will result in a duplicate category named all.
 
