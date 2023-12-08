@@ -28,6 +28,7 @@ from emstencil import Database as emDB
 from emstencil import Dataclasses as emClasses
 from emstencil import SelectionForm as emSelector
 
+
 def main() -> None:
   """Main function for program start."""
   # Get all templates and populate all associated metadata with them.

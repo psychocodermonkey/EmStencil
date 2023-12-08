@@ -1,5 +1,5 @@
 '''
- Program: Database singleton class for database management.
+ Program: Internal package init for EmStencil
     Name: Andrew Dixon            File: __init__.py
     Date: 23 Nov 2023
    Notes:
