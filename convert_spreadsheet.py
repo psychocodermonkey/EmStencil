@@ -47,7 +47,7 @@ parser.add_argument(
 
 parser.add_argument(
   "--xls", "-x",
-  default="data/ex_templates.xlsx",
+  default="data/templates.xlsx",
   help="Location for templates in xlsx format to add to convert to database."
 )
 
