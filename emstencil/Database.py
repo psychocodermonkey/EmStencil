@@ -129,3 +129,53 @@ class TemplateDB:
       tags.append(tag)
 
     return tags
+
+  def AddTemplate(self, template: emClasses.EmailTemplate) -> None:
+    """Add template to the database from the template object."""
+    #TODO: Implement AddTemplate
+    pass
+
+  def DeleteTemplate(self, template: emClasses.EmailTemplate) -> None:
+    """Look for and delete the specified template from the database."""
+    # TODO: Implement Delete Template
+    cursor = self.DB.cursor()
+
+    # Remove all of the tags associated to this specific template.
+    cursor.execute(
+      """
+        delete from templateTags
+        where tmplt_uid = ?;
+      """,
+      [template.rowID]
+    )
+
+    # Remove the specific template from the database.
+    cursor.execute(
+      """
+        delete from templates
+        where uid = ?;
+      """,
+      [template.rowID]
+    )
+
+    # Clean up the tags table in case this was the only template utilizing the given tag.
+    self.RemoveEmptyTags()
+
+    return
+
+  def UpdateTemplate(self, template: emClasses.EmailTemplate) -> None:
+    """Update the template passed in the database. This will update all fields."""
+    # TODO: Implement Update Template
+    pass
+
+  def RemoveEmptyTags(self) -> None:
+    """Remove any tags that have no associated templates with them."""
+    cursor = self.DB.cursor()
+    cursor.execute(
+      """
+        delete from tags
+        where uid not in
+          (select distinct tag_uid from templateTags);
+      """
+    )
+    return
