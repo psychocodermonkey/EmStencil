@@ -42,7 +42,7 @@ class TemplateSelector(QWidget):
     self.db = emDB.TemplateDB()
 
     # Set basics for main application window.
-    self.setWindowTitle('Templated email builder')
+    self.setWindowTitle('EmStencil - Templated email builder')
     self.layout = QVBoxLayout()
     self.setLayout(self.layout)
 
