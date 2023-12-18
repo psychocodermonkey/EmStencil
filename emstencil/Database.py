@@ -23,6 +23,7 @@
 
 import sqlite3
 from emstencil import Dataclasses as emClasses
+from emstencil.Dataclasses import State
 
 
 class TemplateDB:
@@ -57,20 +58,23 @@ class TemplateDB:
       """
     )
 
+    # Build template objects for query results.
     tmplts = []
     for row in cursor:
       tmplt = emClasses.EmailTemplate(row[0], row[1])
       tmplt.rowID = row[2]
+      tmplt.state = State.EXISTING
       tmplts.append(tmplt)
 
     return tmplts
 
-
   def FetchMetadataForTemplate(self, tmplt: emClasses.EmailTemplate) -> emClasses.EmailTemplate:
     """Get all metadata tags associated with template."""
+    # Template passed must have a rowID in order to know get tags from the DB.
     if tmplt.rowID is None:
       raise emClasses.AccessNullRowID()
 
+    # Run query to get tags associated with the given template.
     cursor = self.DB.cursor()
     cursor.execute(
       """
@@ -81,18 +85,19 @@ class TemplateDB:
       [tmplt.rowID]
     )
 
+    # Build objects for the tags and append them to the template object.
     tmplt.metadata = []
     for row in cursor:
       wkTag = emClasses.MetadataTag(row[1])
       wkTag.rowID = row[0]
       wkTag.assocRowID = tmplt.rowID
+      wkTag.state = State.EXISTING
       tmplt.metadata.append(wkTag)
 
     return tmplt
 
-
   def FetchTemplatesForTag(self, srchTag: str) -> list[emClasses.EmailTemplate]:
-    """Return all templates from the DB."""
+    """Return all templates from the DB for a given meta tag."""
     cursor = self.DB.cursor()
     cursor.execute(
       """
@@ -103,14 +108,15 @@ class TemplateDB:
       [srchTag]
     )
 
+    # Build the template objects from the query results.
     tmplts = []
     for row in cursor:
       tmplt = emClasses.EmailTemplate(row[0], row[1])
       tmplt.rowID = row[2]
+      tmplt.state = State.EXISTING
       tmplts.append(tmplt)
 
     return tmplts
-
 
   def FetchAllMetadataTags(self) -> list[emClasses.MetadataTag]:
     """Return all metadata tags associated with template."""
@@ -122,17 +128,19 @@ class TemplateDB:
       """
     )
 
+    # Build the meta data tag objects to be passed back out.
     tags = []
     for row in cursor:
       tag = emClasses.MetadataTag(row[0])
       tag.rowID = row[1]
+      tag.state = State.EXISTING
       tags.append(tag)
 
     return tags
 
   def AddTemplate(self, template: emClasses.EmailTemplate) -> None:
     """Add template to the database from the template object."""
-    #TODO: Implement AddTemplate
+    # TODO: Implement AddTemplate
     pass
 
   def DeleteTemplate(self, template: emClasses.EmailTemplate) -> None:
@@ -178,4 +186,5 @@ class TemplateDB:
           (select distinct tag_uid from templateTags);
       """
     )
+
     return

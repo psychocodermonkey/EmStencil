@@ -21,7 +21,13 @@
 """
 
 import re
+from enum import Enum
 from dataclasses import dataclass, field
+
+
+class State(Enum):
+  """State enum for use in dataclass objects to denote state."""
+  ADDED, UPDATED, DELETED, EXISTING = range(0, 4)
 
 
 # ==================================================================================================
@@ -36,11 +42,14 @@ class MetadataTag:
     - tag :: String that is the actual tag for the Metadata.
     - rowID :: property is for storing the RowID of this metadata tag table.
     - assocRowID :: property is for storing the RowID for the associative record table.
+    - state :: Property to hold the database state for the object.
+        - Values :: ADDED, UPDATED, DELETED, EXISTING
   """
 
   tag: str
   rowID: int = field(init=False, default=0)
   assocRowID: int = field(init=False, repr=False, default=0)
+  state: State = field(init=False, default=State.ADDED)
 
   def __post_init__(self) -> None:
     """Initilize fields calculated off of data from creation."""
@@ -67,6 +76,8 @@ class EmailTemplate:
         - Using the Metadata object allows for tracking of metadata row ID's in their respective tables.
     - rowID :: RowID for this template in the table. Not set as part of init,
                be sure to check/set before use
+    - state :: Property to hold the database state for the object.
+        - Values :: ADDED, UPDATED, DELETED, EXISTING
   ## Exceptions
     - TemplateKeyValueMismatch
         - Thrown when there is a key that does not exist in both the object dictionary and a passed
@@ -86,6 +97,7 @@ class EmailTemplate:
   fields: dict = field(default_factory=dict, init=False, repr=False)
   metadata: list[MetadataTag] = field(default_factory=list, repr=False)
   rowID: int = field(init=False, default=0)
+  state: State = field(init=False, default=State.ADDED)
 
   def __post_init__(self) -> None:
     """Post initilization build internal requirements for template object."""
