@@ -28,4 +28,4 @@ license = { file = "LICENSE" }
 keywords = ["email", "template", "generator"]
 
 [project.gui-scripts]
-EmStencil-gui = "emstencil:main"
+EmStencil-gui = "EmStencil:main"

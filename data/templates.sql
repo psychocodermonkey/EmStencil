@@ -128,7 +128,7 @@ create index ix_TemplateTags_by_Tag ON templateTags (
 
 
 -- View with templates listed with all keys
-Create View vw_Templates_Tags AS
+Create View vw_Templates_Tags as
   select tm.title as title, tm.content as content,
     ta.tag as tag, tm.uid as tmpRowID, ta.uid as tgRowID
   from templates tm

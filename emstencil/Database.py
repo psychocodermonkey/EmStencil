@@ -30,11 +30,11 @@ class TemplateDB:
   """Data layer class for handling translation of data to and from the database."""
   _instance = None
 
-  def __new__(cls, *args, **kwargs):
+  def __new__(db, *args, **kwargs):
     """Generate new instance if one doesn't exist, return the existing one if it does."""
-    if not cls._instance:
-      cls._instance = super().__new__(cls, *args, **kwargs)
-    return cls._instance
+    if not db._instance:
+      db._instance = super().__new__(db, *args, **kwargs)
+    return db._instance
 
   def __init__(self):
     """New instance of database connection."""
