@@ -39,6 +39,9 @@ class TemplateDB:
     """New instance of database connection."""
     self.DB = sqlite3.connect('data/templates.db')
 
+    # Be sure to enable foreign keys on database
+    self.DB.execute("pragma foreign_keys = ON")
+
   def getConnection(self) -> sqlite3.connect:
     """Return connection to the database if special queries are needed."""
     return self.DB
