@@ -40,7 +40,7 @@ Create Table templates (
 
 -- Trigger for populating updated timestamp on templates.dateUpdated
 Create Trigger Templates_Date_Updated
-  After Update On templates
+  After Update of title, content On templates
   Begin Update templates
     Set DateUpdated = Datetime('Now')
     Where uid = Old.uid;
@@ -70,7 +70,7 @@ create table tags (
 
 -- Trigger for populating updated timestamp on tags.dateUpdated
 Create Trigger Tags_Date_Updated
-  After Update On tags
+  After Update of tag On tags
   Begin Update tags
     Set DateUpdated = Datetime('Now')
     Where uid = Old.uid;
@@ -97,12 +97,14 @@ Create Table templateTags (
   tag_uid integer references tags(uid),
   dateAdded datetime,
   dateUpdated datetime,
-  Constraint DuplicateRowTagViolation unique (tmplt_uid, tag_uid)
+  Constraint DuplicateRowTagViolation unique (tmplt_uid, tag_uid),
+  Foreign key(tmplt_uid) references templates(uid),
+  Foreign key(tag_uid) references tags(uid)
 );
 
 -- Trigger for populating updated timestamp on templateTags.dateUpdated
 Create Trigger TemplateTags_Date_Updated
-  After Update On templateTags
+  After Update of tmplt_uid, tag_uid On templateTags
   Begin Update templateTags
     Set DateUpdated = Datetime('Now')
     Where uid = Old.uid;
@@ -128,7 +130,7 @@ create index ix_TemplateTags_by_Tag ON templateTags (
 
 
 -- View with templates listed with all keys
-Create View vw_Templates_Tags AS
+Create View vw_Templates_Tags as
   select tm.title as title, tm.content as content,
     ta.tag as tag, tm.uid as tmpRowID, ta.uid as tgRowID
   from templates tm
@@ -137,3 +139,6 @@ Create View vw_Templates_Tags AS
     left join tags ta
       on tg.tag_uid = ta.uid
   order by tmpRowID, tgRowID;
+
+-- Set databas options
+PRAGMA foreign_keys = ON;
