@@ -40,6 +40,9 @@ class TemplateDB:
     """New instance of database connection."""
     self.DB = sqlite3.connect('data/templates.db')
 
+    # Be sure to enable foreign keys on database
+    self.DB.execute("pragma foreign_keys = ON")
+
   def getConnection(self) -> sqlite3.connect:
     """Return connection to the database if special queries are needed."""
     return self.DB
@@ -173,8 +176,17 @@ class TemplateDB:
 
   def UpdateTemplate(self, template: emClasses.EmailTemplate) -> None:
     """Update the template passed in the database. This will update all fields."""
-    # TODO: Implement Update Template
-    pass
+    cursor = self.DB.cursor()
+    cursor.execute(
+      """
+        update templates
+        set title = ?, content = ?
+        where uid = ?
+      """,
+      [template.title, template.content, template.rowID]
+    )
+
+    # TODO: Need to implement handing ADD / DELETE associated tags.
 
   def RemoveEmptyTags(self) -> None:
     """Remove any tags that have no associated templates with them."""

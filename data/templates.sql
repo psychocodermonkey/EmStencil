@@ -141,4 +141,5 @@ Create View vw_Templates_Tags as
   order by tmpRowID, tgRowID;
 
 -- Set databas options
-PRAGMA foreign_keys = ON;
+-- Foreign key enforcement is off by default, needs to be set on connect.
+-- Pragma foreign_keys = ON;
