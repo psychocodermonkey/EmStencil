@@ -168,5 +168,6 @@ Desktop.ini
 # Exclude development testing files from repo
 *.db
 *_dev.txt
+*_dev.sql
 *.xlsx
 !templates.xlsx

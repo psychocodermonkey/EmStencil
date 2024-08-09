@@ -98,8 +98,8 @@ Create Table templateTags (
   dateAdded datetime,
   dateUpdated datetime,
   Constraint DuplicateRowTagViolation unique (tmplt_uid, tag_uid),
-  Foreign key(tmplt_uid) references templates(uid),
-  Foreign key(tag_uid) references tags(uid)
+  Foreign key(tmplt_uid) references templates(uid) on delete cascade,
+  Foreign key(tag_uid) references tags(uid) on delete cascade
 );
 
 -- Trigger for populating updated timestamp on templateTags.dateUpdated
