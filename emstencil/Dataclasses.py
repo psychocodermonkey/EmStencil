@@ -23,6 +23,7 @@
 import re
 from enum import Enum
 from dataclasses import dataclass, field
+from emstencil.Exceptions import TemplateKeyValueMismatch, TemplateKeyValueNull
 
 
 class State(Enum):
@@ -30,9 +31,6 @@ class State(Enum):
   ADDED, UPDATED, DELETED, EXISTING = range(0, 4)
 
 
-# ==================================================================================================
-# Dataclasses
-# ==================================================================================================
 @dataclass(slots=True, order=True)
 class MetadataTag:
   """
@@ -165,29 +163,3 @@ class EmailTemplate:
   def clearFields(self) -> None:
     """Reset all values in the field dictionary back to None"""
     self.fields = {key: None for key in self.fields}
-
-
-# ==================================================================================================
-# Exception Classes
-# ==================================================================================================
-class TemplateKeyValueMismatch(Exception):
-  """Exception for self.fields dictionary element mismatch"""
-  def __init__(self, source: dict, dest: dict) -> None:
-    self.missingKeys = list(set(dest).symmetric_difference(source))
-    self.message = f'{self.missingKeys} not in source and destination'
-    super().__init__(self.message)
-
-
-class TemplateKeyValueNull(Exception):
-  """Exception for when a dictionary value is None"""
-  def __init__(self, value: str) -> None:
-    self.key = value
-    self.message = f'Value for key: [{self.key}] is Null'
-    super().__init__(self.message)
-
-
-class AccessNullRowID(Exception):
-  """Exception for when rowID expected and it is null"""
-  def __init__(self, *args: object) -> None:
-    self.message = 'Attempted to use rowID without first setting it'
-    super().__init__(self.message)

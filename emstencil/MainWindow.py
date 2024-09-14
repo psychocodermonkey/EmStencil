@@ -26,14 +26,25 @@
 #         Edit> Template?
 #         Help> Instructions | About
 
-from PyQt6.QtWidgets import QMainWindow
-# from PyQt6.QtGui import QKeySequence, QShortcut
+from PyQt6.QtGui import QAction
+from PyQt6.QtWidgets import QMainWindow, QMenu
 from emstencil import SelectionForm as selForm
 
 
 class EmStencil(QMainWindow):
   def __init__(self, templateList: list, metaTags: list) -> None:
     super(EmStencil, self).__init__()
+
+    # Set up the menu bar and make sure it is attached to the window.
+    self.menubar = self.menuBar()
+    self.menubar.setNativeMenuBar(False)
+
+    # Define the file menu actions and add them to the file menu on the main menubar
+    menu = QMenu('File', self)
+    fileExit = QAction('Exit', self)
+    fileExit.triggered.connect(self.closeWindow)
+    menu.addAction(fileExit)
+    self.menubar.addMenu(menu)
 
     # Create instance of application widget and add to main window.
     selectionForm = selForm.TemplateSelector(templateList, metaTags, parent=self)
