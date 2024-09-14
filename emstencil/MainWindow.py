@@ -1,5 +1,5 @@
 #! /usr/bin/env python3
-'''
+"""
  Program: Main window for application.
     Name: Andrew Dixon            File: MainWindow.py
     Date: 28 Nov 2023
@@ -18,7 +18,7 @@
     You should have received a copy of the GNU General Public License along with this program.
     If not, see <https://www.gnu.org/licenses/>.
 ........1.........2.........3.........4.........5.........6.........7.........8.........9.........0.........1.........2.........3..
-'''
+"""
 # TODO: Write this to launch other windows etc for C.R.U.D.
 # TODO: Add menu bar to form.
 # TODO: Menu bar should contain:
@@ -28,7 +28,7 @@
 
 from PyQt6.QtGui import QAction
 from PyQt6.QtWidgets import QMainWindow, QMenu
-from emstencil import SelectionForm as selForm
+from .SelectionForm import TemplateSelector
 
 
 class EmStencil(QMainWindow):
@@ -47,7 +47,7 @@ class EmStencil(QMainWindow):
     self.menubar.addMenu(menu)
 
     # Create instance of application widget and add to main window.
-    selectionForm = selForm.TemplateSelector(templateList, metaTags, parent=self)
+    selectionForm = TemplateSelector(templateList, metaTags, parent=self)
     self.setCentralWidget(selectionForm)
 
   def closeWindow(self) -> None:

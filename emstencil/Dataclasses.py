@@ -23,7 +23,7 @@
 import re
 from enum import Enum
 from dataclasses import dataclass, field
-from emstencil.Exceptions import TemplateKeyValueMismatch, TemplateKeyValueNull
+from .Exceptions import TemplateKeyValueMismatch, TemplateKeyValueNull
 
 
 class State(Enum):

@@ -21,7 +21,11 @@
 """
 
 class TemplateKeyValueMismatch(Exception):
-  """Exception for self.fields dictionary element mismatch"""
+  """
+  ## Exception for self.fields dictionary element mismatch
+    - Thrown when there is a key that does not exist in both the object dictionary and a passed
+      dictionary being used for updates.
+  """
   def __init__(self, source: dict, dest: dict) -> None:
     self.missingKeys = list(set(dest).symmetric_difference(source))
     self.message = f'{self.missingKeys} not in source and destination'
@@ -29,7 +33,10 @@ class TemplateKeyValueMismatch(Exception):
 
 
 class TemplateKeyValueNull(Exception):
-  """Exception for when a dictionary value is None"""
+  """
+  ## Exception for when a dictionary value is None
+    - Thrown when a value for akey in the dictionary is NULL.
+  """
   def __init__(self, value: str) -> None:
     self.key = value
     self.message = f'Value for key: [{self.key}] is Null'
@@ -37,7 +44,10 @@ class TemplateKeyValueNull(Exception):
 
 
 class AccessNullRowID(Exception):
-  """Exception for when rowID expected and it is null"""
+  """
+  ## Exception for when rowID expected and it is null
+    - Exception thrown when trying to utilize a rowID from an object without it first being set.
+  """
   def __init__(self, *args: object) -> None:
     self.message = 'Attempted to use rowID without first setting it'
     super().__init__(self.message)

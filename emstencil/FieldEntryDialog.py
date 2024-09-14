@@ -21,12 +21,13 @@
 """
 
 from PyQt6.QtWidgets import QDialog, QHBoxLayout, QLabel, QLineEdit, QPushButton, QVBoxLayout
-from emstencil import Dataclasses as emClasses
+from .Dataclasses import EmailTemplate
+from .Exceptions import TemplateKeyValueNull
 
 
 class FieldEntryDialog(QDialog):
   """Build dialog to get data for the fields in the field dictionary."""
-  def __init__(self, template: emClasses.EmailTemplate, parent=None):
+  def __init__(self, template: EmailTemplate, parent=None):
     super().__init__()
     self.setWindowTitle('Fields available for template')
     self.parent = parent
@@ -86,7 +87,7 @@ class FieldEntryDialog(QDialog):
     try:
       self.template.setFields(self.dictionary)
       self.parent.updateTextArea(self.template)
-    except emClasses.TemplateKeyValueNull:
+    except TemplateKeyValueNull:
       self.parent.updateTextArea(self.template)
 
     return
