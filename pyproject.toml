@@ -1,21 +1,21 @@
 [build-system]
 requires = [
-  "setuptools >= 65.6.0",
-  "wheel",
+  "setuptools >= 74.1.2",
+  "wheel >= 0.44.0",
 ]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "EmStencil"
-version = "2023.12.06"
+version = "2024.09.14"
 dependencies = [
-  "pyodbc==5.0.1",
-  "PyQt6==6.6.0",
-  "PyQt6-Qt6==6.6.0",
-  "PyQt6-sip==13.6.0",
+  "pyodbc==5.1.0",
+  "PyQt6==6.7.1",
+  "PyQt6-Qt6==6.7.2",
+  "PyQt6-sip==13.8.0",
   "sxl==0.0.1a10"
 ]
-requires-python = ">= 3.11"
+requires-python = ">= 3.12"
 authors = [
   {name = "Andrew Dixon", email = "PsychoCoderMonkey@gmail.com"}
 ]
