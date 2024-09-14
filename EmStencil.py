@@ -25,8 +25,9 @@ import sys
 import atexit
 from PyQt6.QtWidgets import QApplication
 from emstencil import Database as emDB
+from emstencil import MainWindow as emMain
 from emstencil import Dataclasses as emClasses
-from emstencil import SelectionForm as emSelector
+
 
 def main() -> None:
   """Main function for program start."""
@@ -51,8 +52,7 @@ def main() -> None:
       template = tmplt
 
   # Execute the screen to get the user data.
-  # screen = mainWindow.EmStencil(TemplateList, MetaTags)
-  screen = emSelector.TemplateSelector(TemplateList, MetaTags)
+  screen = emMain.EmStencil(TemplateList, MetaTags)
   screen.show()
 
   sys.exit(app.exec())

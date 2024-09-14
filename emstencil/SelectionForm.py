@@ -32,7 +32,7 @@ from emstencil import Dataclasses as emClasses
 
 class TemplateSelector(QWidget):
   """Class for main window for selecting and working with templates."""
-  def __init__(self, templateList: list, metaTags: list) -> None:
+  def __init__(self, templateList: list, metaTags: list, parent=None) -> None:
     super(TemplateSelector, self).__init__()
     # Work fields and local variables for the main application.
     fontPointSize = QLabel().font().pointSize()
@@ -40,6 +40,7 @@ class TemplateSelector(QWidget):
     self.metaTags = metaTags
     self.clipboard = QApplication.clipboard()
     self.db = emDB.TemplateDB()
+    self.parent = parent
 
     # Set basics for main application window.
     self.setWindowTitle('EmStencil - Templated email builder')
@@ -178,7 +179,6 @@ class TemplateSelector(QWidget):
     self.textArea.setText(self.templateComboBox.currentData().content)
     self.repaint()
 
-  # TODO: Need to consolidate these two functions to one. Stripe the calls to pass different info.
   def sendUserInfoMessage(self, msg: str) -> None:
     """Send informaiotnal messege to the user."""
     userMessage = QMessageBox()
@@ -234,7 +234,5 @@ class TemplateSelector(QWidget):
 
   def exitClicked(self) -> None:
     """Close the form/application by triggering close from the parent."""
-    # TODO: This should call the parent close method just as the menu bar exit does.
     logging.info('Application close.')
-    self.close()
-  #   self.parent.close()
+    self.parent.closeWindow()
