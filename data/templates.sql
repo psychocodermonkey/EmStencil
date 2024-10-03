@@ -98,8 +98,8 @@ Create Table templateTags (
   dateAdded datetime,
   dateUpdated datetime,
   Constraint DuplicateRowTagViolation unique (tmplt_uid, tag_uid),
-  Foreign key(tmplt_uid) references templates(uid),
-  Foreign key(tag_uid) references tags(uid)
+  Foreign key(tmplt_uid) references templates(uid) on delete cascade,
+  Foreign key(tag_uid) references tags(uid) on delete cascade
 );
 
 -- Trigger for populating updated timestamp on templateTags.dateUpdated
@@ -141,4 +141,6 @@ Create View vw_Templates_Tags as
   order by tmpRowID, tgRowID;
 
 -- Set databas options
-PRAGMA foreign_keys = ON;
+-- Foreign key enforcement is off by default, needs to be set on connect.
+-- Pragma foreign_keys = ON;
+

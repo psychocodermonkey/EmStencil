@@ -1,5 +1,5 @@
 #! /usr/bin/env python3
-'''
+"""
  Program: Setup the SQLite3 Database and convert, if necessary, from an Excel spreadsheet.
     Name: Andrew Dixon            File: setup.py
     Date: 23 Nov 2023
@@ -18,7 +18,7 @@
     You should have received a copy of the GNU General Public License along with this program.
     If not, see <https://www.gnu.org/licenses/>.
 ........1.........2.........3.........4.........5.........6.........7.........8.........9.........0.........1.........2.........3..
-'''
+"""
 
 import argparse
 import sqlite3
@@ -59,13 +59,13 @@ database = sqlite3.connect(args.database)
 
 # constants - Define names for thigs we want to make easily modifiable
 Spreadsheet = {
-  'name' : args.xls,            # Can also be workbook path if it needs to be
+  'name' : args.xls,                            # Can also be workbook path if it needs to be
   'sheet' : 'Sheet1',                           # Can be sheet name or number (non-zero based)
   'hasColHdg' : True,                           # Does the spreadsheet have column headings?
 }
 
 def main():
-  """ Main - Xlate the spreadsheet into an object to be able to manipulate """
+  """Main - Xlate the spreadsheet into an object to be able to manipulate"""
   # Create the SQLite3 database from the DDL definition.
   dbCursor = database.cursor()
   with open(args.ddl) as fp:
@@ -78,14 +78,15 @@ def main():
 # Define a class on the fly to assign the data to to make accessing it easier.
 @dataclass
 class XlatedRow:
-  """ Data class for spreadsheet columns, gives meaningful names in program.
-      Define names for columns so that the object has names that are easy to use. """
+  """Data class for spreadsheet columns, gives meaningful names in program.
+     Define names for columns so that the object has names that are easy to use."""
   title: str
   content: str
   tags: list
   rowID: int = field(init=False)
 
   def __post_init__(self):
+    """Do some clean up to ensure data is as enforcably consistent as we can make it safely."""
     self.rowID = -1
     # Be sure to clean up the tags so they have no leading or trailing spaces.
     self.tags = list(map(str.strip, self.tags))
@@ -94,11 +95,11 @@ class XlatedRow:
     self.tags = list(map(str.lower, self.tags))
 
   def __repr__(self) -> str:
-    """ Override the default repr method. """
+    """Override the default repr method."""
     return f'<XlatedRow(Name({self.title}):RowID({self.rowID}))>'
 
   def __str__(self) -> str:
-    """ User usable string representation of the row data. """
+    """User usable string representation of the row data."""
     return f'{self.title}'
 
 
@@ -109,7 +110,7 @@ def convertSpreadsheet(Spreadsheet: dict) -> None:
   tagsToCreate = set()
   TagIDs = {}
 
-  # Functions to convert column letters to numbers and vice-versa. Using lambda because I can.
+  # Functions to convert column letters to numbers and vice-versa. Using lambda because I like this as an example.
   colNum = lambda a: 0 if a == '' else 1 + ord(a[-1]) - ord('A') + 26 * colNum(a[:-1])  # noqa: E731
   colName = lambda n: '' if n <= 0 else colName((n - 1) // 26) + chr((n - 1) % 26 + ord('A'))  # noqa: E731
 
@@ -156,9 +157,10 @@ def convertSpreadsheet(Spreadsheet: dict) -> None:
 
 
 def clearTables() -> None:
-  """ Delete all values from all tables before reconverting.
-      Helpful for re-converting the data when the spreadsheet is updated.
-      Currently this is un-used since this rebuilds the DB from ddl every time."""
+  """Delete all values from all tables before reconverting.
+     Helpful for re-converting the data when the spreadsheet is updated.
+     Currently this is un-used since this rebuilds the DB from ddl every time"""
+
   cursor = database.cursor()
   cursor.execute("delete from templateTags")
   cursor.execute("delete from tags")
@@ -166,8 +168,8 @@ def clearTables() -> None:
 
 
 def addTemplateRow(row: XlatedRow) -> XlatedRow:
-  """ Add Template content rows to the templates table in the database.
-      Returns the row it just added updated with it's current rowID in the database. """
+  """Add Template content rows to the templates table in the database.
+     Returns the row it just added updated with it's current rowID in the database."""
   cursor = database.cursor()
   cursor.execute(
     """
@@ -181,8 +183,8 @@ def addTemplateRow(row: XlatedRow) -> XlatedRow:
 
 
 def addTagRow(tag: str) -> int:
-  """ Add Tag content rows to the tags table in the database.
-      Returns the rowID for what it just added. """
+  """Add Tag content rows to the tags table in the database.
+     Returns the rowID for what it just added."""
   cursor = database.cursor()
   cursor.execute(
     """
@@ -195,7 +197,7 @@ def addTagRow(tag: str) -> int:
 
 
 def addTemplateTagsRow(tmpltRowID: int, tagRowID: int) -> None:
-  """ Add records for tags associated with template items. """
+  """Add records for tags associated with template items."""
   cursor = database.cursor()
   cursor.execute(
     """

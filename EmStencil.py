@@ -19,14 +19,16 @@
     If not, see <https://www.gnu.org/licenses/>.
 ........1.........2.........3.........4.........5.........6.........7.........8.........9.........0.........1.........2.........3..
 """
+
 # TODO: Implement update of templates instead of relying on reconverting from spreadsheet.
+# TODO: Need to handle if/when a meta tag exists in the database list but is not attached to any templates.
 
 import sys
 import atexit
-from PyQt6.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication
 from emstencil import Database as emDB
+from emstencil import MainWindow as emMain
 from emstencil import Dataclasses as emClasses
-from emstencil import SelectionForm as emSelector
 
 
 def main() -> None:
@@ -52,8 +54,8 @@ def main() -> None:
       template = tmplt
 
   # Execute the screen to get the user data.
-  # screen = mainWindow.EmStencil(TemplateList, MetaTags)
-  screen = emSelector.TemplateSelector(TemplateList, MetaTags)
+  screen = emMain.EmStencil(TemplateList, MetaTags)
+
   screen.show()
 
   sys.exit(app.exec())

@@ -21,28 +21,29 @@
 """
 
 import logging
-from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QFontMetrics, QKeySequence, QShortcut
-from PyQt6.QtWidgets import QApplication, QMessageBox, QWidget, QHBoxLayout, QVBoxLayout
-from PyQt6.QtWidgets import QLabel, QPushButton, QTextEdit, QComboBox
-from emstencil import Database as emDB
-from emstencil import FieldEntryDialog as emDialog
-from emstencil import Dataclasses as emClasses
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QFontMetrics, QKeySequence, QShortcut
+from PySide6.QtWidgets import QApplication, QMessageBox, QWidget, QHBoxLayout, QVBoxLayout
+from PySide6.QtWidgets import QLabel, QPushButton, QTextEdit, QComboBox
+from .Database import TemplateDB
+from .FieldEntryDialog import FieldEntryDialog
+from .Dataclasses import EmailTemplate, MetadataTag
 
 
 class TemplateSelector(QWidget):
   """Class for main window for selecting and working with templates."""
-  def __init__(self, templateList: list, metaTags: list) -> None:
+  def __init__(self, templateList: list, metaTags: list, parent=None) -> None:
     super(TemplateSelector, self).__init__()
     # Work fields and local variables for the main application.
     fontPointSize = QLabel().font().pointSize()
     self.templateList = templateList
     self.metaTags = metaTags
     self.clipboard = QApplication.clipboard()
-    self.db = emDB.TemplateDB()
+    self.db = TemplateDB()
+    self.parent = parent
 
     # Set basics for main application window.
-    self.setWindowTitle('Templated email builder')
+    self.setWindowTitle('EmStencil - Templated email builder')
     self.layout = QVBoxLayout()
     self.setLayout(self.layout)
 
@@ -164,7 +165,7 @@ class TemplateSelector(QWidget):
     """Handling the UI update from the metatag combo box selection changing."""
     selectedMetadataTag = self.metaTagComboBox.currentData()
     # Since "all" doesn't exist in the DB, check if the "all" we added by hand is selected.
-    if selectedMetadataTag == emClasses.MetadataTag('all'):
+    if selectedMetadataTag == MetadataTag('all'):
       self.templateList = self.db.FetchAllTemplates()
 
     # Otherwise filter based on the selected tag
@@ -178,7 +179,6 @@ class TemplateSelector(QWidget):
     self.textArea.setText(self.templateComboBox.currentData().content)
     self.repaint()
 
-  # TODO: Need to consolidate these two functions to one. Stripe the calls to pass different info.
   def sendUserInfoMessage(self, msg: str) -> None:
     """Send informaiotnal messege to the user."""
     userMessage = QMessageBox()
@@ -210,12 +210,12 @@ class TemplateSelector(QWidget):
     """Process the current selection, show the update window for the fields."""
     selectedEmailTemplate = self.templateComboBox.currentData()
     if len(selectedEmailTemplate.fields) > 0:
-      self.editScreen = emDialog.FieldEntryDialog(selectedEmailTemplate, parent=self)
+      self.editScreen = FieldEntryDialog(selectedEmailTemplate, parent=self)
       self.editScreen.show()
     else:
       self.sendUserInfoMessage("Template has no fields defined.")
 
-  def updateTextArea(self, tmplt: emClasses.EmailTemplate) -> None:
+  def updateTextArea(self, tmplt: EmailTemplate) -> None:
     """Upate the text area with the template"""
     if tmplt.fieldsSet:
       self.textArea.setText(tmplt.replacedText)
@@ -235,5 +235,4 @@ class TemplateSelector(QWidget):
   def exitClicked(self) -> None:
     """Close the form/application by triggering close from the parent."""
     logging.info('Application close.')
-    self.close()
-  #   self.parent.close()
+    self.parent.closeWindow()

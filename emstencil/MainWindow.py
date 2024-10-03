@@ -1,5 +1,5 @@
 #! /usr/bin/env python3
-'''
+"""
  Program: Main window for application.
     Name: Andrew Dixon            File: MainWindow.py
     Date: 28 Nov 2023
@@ -18,8 +18,8 @@
     You should have received a copy of the GNU General Public License along with this program.
     If not, see <https://www.gnu.org/licenses/>.
 ........1.........2.........3.........4.........5.........6.........7.........8.........9.........0.........1.........2.........3..
-'''
-# TODO: Imeplement this as the main form so we can add a menu bar for managing the DB.
+"""
+
 # TODO: Write this to launch other windows etc for C.R.U.D.
 # TODO: Add menu bar to form.
 # TODO: Menu bar should contain:
@@ -27,9 +27,9 @@
 #         Edit> Template?
 #         Help> Instructions | About
 
-from PyQt6.QtWidgets import QMainWindow
-# from PyQt6.QtGui import QKeySequence, QShortcut
-from emstencil import SelectionForm as selForm
+from PySide6.QtGui import QAction
+from PySide6.QtWidgets import QMainWindow, QMenu
+from .SelectionForm import TemplateSelector
 
 
 class EmStencil(QMainWindow):
@@ -37,14 +37,20 @@ class EmStencil(QMainWindow):
   def __init__(self, templateList: list, metaTags: list) -> None:
     super(EmStencil, self).__init__()
 
+    # Set up the menu bar and make sure it is attached to the window.
+    self.menubar = self.menuBar()
+    self.menubar.setNativeMenuBar(False)
+
+    # Define the file menu actions and add them to the file menu on the main menubar
+    menu = QMenu('File', self)
+    fileExit = QAction('Exit', self)
+    fileExit.triggered.connect(self.closeWindow)
+    menu.addAction(fileExit)
+    self.menubar.addMenu(menu)
+
     # Create instance of application widget and add to main window.
-    self.selectionForm = selForm.TemplateSelector(self, templateList, metaTags)
-    # self.selectionForm.setParent(self)
-
-    self.setCentralWidget(self.selectionForm)
-
-    # self.exitShortcut = QShortcut(QKeySequence('Esc'), self)
-    # self.exitShortcut.activated.connect(self.closeWindow)
+    selectionForm = TemplateSelector(templateList, metaTags, parent=self)
+    self.setCentralWidget(selectionForm)
 
   def closeWindow(self) -> None:
     """Close the window."""

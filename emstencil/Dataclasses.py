@@ -21,12 +21,16 @@
 """
 
 import re
+from enum import Enum
 from dataclasses import dataclass, field
+from .Exceptions import TemplateKeyValueMismatch, TemplateKeyValueNull
 
 
-# ==================================================================================================
-# Dataclasses
-# ==================================================================================================
+class State(Enum):
+  """State enum for use in dataclass objects to denote state."""
+  ADDED, UPDATED, DELETED, EXISTING = range(0, 4)
+
+
 @dataclass(slots=True, order=True)
 class MetadataTag:
   """
@@ -36,11 +40,14 @@ class MetadataTag:
     - tag :: String that is the actual tag for the Metadata.
     - rowID :: property is for storing the RowID of this metadata tag table.
     - assocRowID :: property is for storing the RowID for the associative record table.
+    - state :: Property to hold the database state for the object.
+        - Values :: ADDED, UPDATED, DELETED, EXISTING
   """
 
   tag: str
   rowID: int = field(init=False, default=0)
   assocRowID: int = field(init=False, repr=False, default=0)
+  state: State = field(init=False, default=State.ADDED)
 
   def __post_init__(self) -> None:
     """Initilize fields calculated off of data from creation."""
@@ -60,13 +67,15 @@ class EmailTemplate:
     - Case for stored data to replace in the fields is matched based on case of the text of the field.
   ## Properties
     - title :: Description for the template. Displayed when converted/represented as a string.
-    - content :: The content of the email, contains fields to be replaces represented by ${field text}.
+    - content :: The content of the email, contains fields to be replaced represented by ${field text}.
     - fields :: Calculated dictionary of the fields. Store data to replace for each field as the
                 value for the dict.
     - metadata :: List of either values or Metadata objects for content tags of the email
         - Using the Metadata object allows for tracking of metadata row ID's in their respective tables.
     - rowID :: RowID for this template in the table. Not set as part of init,
                be sure to check/set before use
+    - state :: Property to hold the database state for the object.
+        - Values :: ADDED, UPDATED, DELETED, EXISTING
   ## Exceptions
     - TemplateKeyValueMismatch
         - Thrown when there is a key that does not exist in both the object dictionary and a passed
@@ -74,7 +83,7 @@ class EmailTemplate:
     - TemplateKeyValueNull
         - Thrown when a value for a key in the dictionary is NULL.
   ## Caveats
-    - If updating the field list dictionary directly EmailTemplate.fields['key'], it is possible to
+    - If updating the field list dictionary directly (ex: EmailTemplate.fields['key']), it is possible to
       inject additional values into the dictionary. This will make it easier to have NULL values
       when doing the string replacement.
         - Recommended method is to make a copy of the dictionary, manipulate the copy, then set it
@@ -86,6 +95,7 @@ class EmailTemplate:
   fields: dict = field(default_factory=dict, init=False, repr=False)
   metadata: list[MetadataTag] = field(default_factory=list, repr=False)
   rowID: int = field(init=False, default=0)
+  state: State = field(init=False, default=State.ADDED)
 
   def __post_init__(self) -> None:
     """Post initilization build internal requirements for template object."""
@@ -153,29 +163,3 @@ class EmailTemplate:
   def clearFields(self) -> None:
     """Reset all values in the field dictionary back to None"""
     self.fields = {key: None for key in self.fields}
-
-
-# ==================================================================================================
-# Exception Classes
-# ==================================================================================================
-class TemplateKeyValueMismatch(Exception):
-  """Exception for self.fields dictionary element mismatch"""
-  def __init__(self, source: dict, dest: dict) -> None:
-    self.missingKeys = list(set(dest).symmetric_difference(source))
-    self.message = f'{self.missingKeys} not in source and destination'
-    super().__init__(self.message)
-
-
-class TemplateKeyValueNull(Exception):
-  """Exception for when a dictionary value is None"""
-  def __init__(self, value: str) -> None:
-    self.key = value
-    self.message = f'Value for key: [{self.key}] is Null'
-    super().__init__(self.message)
-
-
-class AccessNullRowID(Exception):
-  """Exception for when rowID expected and it is null"""
-  def __init__(self, *args: object) -> None:
-    self.message = 'Attempted to use rowID without first setting it'
-    super().__init__(self.message)

@@ -1,5 +1,6 @@
-'''
- Program: Internal package init for EmStencil
+"""
+ Program: Database singleton class for database management.
+
     Name: Andrew Dixon            File: __init__.py
     Date: 23 Nov 2023
    Notes:
@@ -17,4 +18,4 @@
     You should have received a copy of the GNU General Public License along with this program.
     If not, see <https://www.gnu.org/licenses/>.
 ........1.........2.........3.........4.........5.........6.........7.........8.........9.........0.........1.........2.........3..
-'''
+"""
