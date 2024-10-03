@@ -19,6 +19,7 @@
     If not, see <https://www.gnu.org/licenses/>.
 ........1.........2.........3.........4.........5.........6.........7.........8.........9.........0.........1.........2.........3..
 """
+
 # TODO: Write this to launch other windows etc for C.R.U.D.
 # TODO: Add menu bar to form.
 # TODO: Menu bar should contain:
@@ -26,8 +27,8 @@
 #         Edit> Template?
 #         Help> Instructions | About
 
-from PyQt6.QtGui import QAction
-from PyQt6.QtWidgets import QMainWindow, QMenu
+from PySide6.QtGui import QAction
+from PySide6.QtWidgets import QMainWindow, QMenu
 from .SelectionForm import TemplateSelector
 
 

@@ -67,7 +67,7 @@ class EmailTemplate:
     - Case for stored data to replace in the fields is matched based on case of the text of the field.
   ## Properties
     - title :: Description for the template. Displayed when converted/represented as a string.
-    - content :: The content of the email, contains fields to be replaces represented by ${field text}.
+    - content :: The content of the email, contains fields to be replaced represented by ${field text}.
     - fields :: Calculated dictionary of the fields. Store data to replace for each field as the
                 value for the dict.
     - metadata :: List of either values or Metadata objects for content tags of the email
@@ -83,7 +83,7 @@ class EmailTemplate:
     - TemplateKeyValueNull
         - Thrown when a value for a key in the dictionary is NULL.
   ## Caveats
-    - If updating the field list dictionary directly EmailTemplate.fields['key'], it is possible to
+    - If updating the field list dictionary directly (ex: EmailTemplate.fields['key']), it is possible to
       inject additional values into the dictionary. This will make it easier to have NULL values
       when doing the string replacement.
         - Recommended method is to make a copy of the dictionary, manipulate the copy, then set it

@@ -110,7 +110,7 @@ def convertSpreadsheet(Spreadsheet: dict) -> None:
   tagsToCreate = set()
   TagIDs = {}
 
-  # Functions to convert column letters to numbers and vice-versa. Using lambda because I can.
+  # Functions to convert column letters to numbers and vice-versa. Using lambda because I like this as an example.
   colNum = lambda a: 0 if a == '' else 1 + ord(a[-1]) - ord('A') + 26 * colNum(a[:-1])  # noqa: E731
   colName = lambda n: '' if n <= 0 else colName((n - 1) // 26) + chr((n - 1) % 26 + ord('A'))  # noqa: E731
 

@@ -21,10 +21,10 @@
 """
 
 import logging
-from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QFontMetrics, QKeySequence, QShortcut
-from PyQt6.QtWidgets import QApplication, QMessageBox, QWidget, QHBoxLayout, QVBoxLayout
-from PyQt6.QtWidgets import QLabel, QPushButton, QTextEdit, QComboBox
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QFontMetrics, QKeySequence, QShortcut
+from PySide6.QtWidgets import QApplication, QMessageBox, QWidget, QHBoxLayout, QVBoxLayout
+from PySide6.QtWidgets import QLabel, QPushButton, QTextEdit, QComboBox
 from .Database import TemplateDB
 from .FieldEntryDialog import FieldEntryDialog
 from .Dataclasses import EmailTemplate, MetadataTag
