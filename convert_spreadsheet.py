@@ -160,6 +160,7 @@ def clearTables() -> None:
   """Delete all values from all tables before reconverting.
      Helpful for re-converting the data when the spreadsheet is updated.
      Currently this is un-used since this rebuilds the DB from ddl every time"""
+
   cursor = database.cursor()
   cursor.execute("delete from templateTags")
   cursor.execute("delete from tags")

@@ -33,6 +33,7 @@ from .SelectionForm import TemplateSelector
 
 
 class EmStencil(QMainWindow):
+  """Class for main window for selecting and working with templates."""
   def __init__(self, templateList: list, metaTags: list) -> None:
     super(EmStencil, self).__init__()
 
@@ -53,4 +54,5 @@ class EmStencil(QMainWindow):
 
   def closeWindow(self) -> None:
     """Close the window."""
+    # TODO: Figure out why this is not visible in parent/child relationship with widget.
     self.close()

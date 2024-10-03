@@ -1,8 +1,20 @@
 # EmStencil - Email Stencils
-EmStencil is a templated email generator. Email templates are stored with place holder fields denoted by fields tagged in the format "${field}". The application scans the text provided for these tags and generates a form to fill in the data to be substituted in the email.
+EmStencil is a templated email generator. Email templates are stored with place holder fields denoted by fields tagged in the format ```${field}```. The application scans the text provided for these tags and generates a form to fill in the data to be substituted in the email.
 
 ## Setup
-The initial templates can be loaded by the setup.py from a spreadsheet located in the data folder. The columns in the spreadsheet are converted into the database as the template title, template content, and the categories for the template. The categories are converted from the spreadsheet as a comma separated list. Spaces may be used in the between words in the categories column.
+The initial templates can be loaded by the ```convert_spreadsheet.py``` from a spreadsheet named ```templates.xlsx``` located in the data folder. The columns in the spreadsheet are converted into the database as the template title, template content, and the categories for the template. The categories are converted from the spreadsheet as a comma separated list. Spaces may be used in the between words in the categories column.
+
+The ```convert_spreadsheet.py``` script takes arguments for the location by using the ```--xls``` argument.
+```
+$> python convert_spreadsheet.py --xls templates.xls
+```
+When building templates, the text replaced in email will mimic the text used to describe the data within the tag. Defining a filed ${Customer Name} will ensure the name is capatilized when entered in the screen. Typing in "john doe" on the prompt screen will yeild "John Doe" in the email text. The following are recognized:
+```
+- ${ALL CAPS LETTERS}
+- ${all lowercase letters}
+- ${Title Case Sentence}
+```
+Any other entry patterns will not affect the output of the text entered on the prompt screen.
 
 There is no need to include a category for "all" as this is handled by the application to show all results. Adding an "all" key word will result in a duplicate category named all.
 

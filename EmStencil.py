@@ -55,6 +55,7 @@ def main() -> None:
 
   # Execute the screen to get the user data.
   screen = emMain.EmStencil(TemplateList, MetaTags)
+
   screen.show()
 
   sys.exit(app.exec())
