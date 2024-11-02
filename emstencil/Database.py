@@ -43,7 +43,7 @@ class TemplateDB:
     # Be sure to enable foreign keys on database
     self.DB.execute("pragma foreign_keys = ON")
 
-  def getConnection(self) -> sqlite3.connect:
+  def getConnection(self) -> sqlite3.Connection:
     """Return connection to the database if special queries are needed."""
     return self.DB
 
