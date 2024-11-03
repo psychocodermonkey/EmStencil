@@ -44,18 +44,21 @@ def main() -> None:
   MetaTags[0].assocRowID = 0
   MetaTags = MetaTags + db.FetchAllMetadataTags()
 
-  # print results for what we grabbed.
-  template = TemplateList[0]
-  app = QApplication(sys.argv)
+  # If no templates were returned from the database, plug in a dummy template.
+  if len(TemplateList) == 0:
+    tag = emClasses.MetadataTag('None')
+    template = emClasses.EmailTemplate('--Empty List--', 'No templates loaded', [tag])
+    TemplateList.append(template)
 
   # Find the template with the most number of fields.
-  for tmplt in TemplateList:
-    if len(tmplt.fields) > len(template.fields):
-      template = tmplt
+  # template = TemplateList[0]
+  # for tmplt in TemplateList:
+  #   if len(tmplt.fields) > len(template.fields):
+  #     template = tmplt
 
-  # Execute the screen to get the user data.
+  # Build the app object, populate the screen and show the main window.
+  app = QApplication(sys.argv)
   screen = emMain.EmStencil(TemplateList, MetaTags)
-
   screen.show()
 
   sys.exit(app.exec())

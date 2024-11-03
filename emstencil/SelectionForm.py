@@ -110,7 +110,7 @@ class TemplateSelector(QWidget):
 
     # Get what the default font and size is so we can use it to calculate string length.
     fontMetrics = QFontMetrics(comboBox.font())
-    minWidth = 0
+    minWidth: int = 60
 
     for item in items:
       stringWidth = fontMetrics.horizontalAdvance(str(item) + ' ' * 3)
@@ -165,12 +165,16 @@ class TemplateSelector(QWidget):
     """Handling the UI update from the metatag combo box selection changing."""
     selectedMetadataTag = self.metaTagComboBox.currentData()
     # Since "all" doesn't exist in the DB, check if the "all" we added by hand is selected.
-    if selectedMetadataTag == MetadataTag('all'):
+    if selectedMetadataTag == MetadataTag('all') and self.metaTagComboBox.count() > 1:
       self.templateList = self.db.FetchAllTemplates()
 
-    # Otherwise filter based on the selected tag
-    else:
+    # Otherwise filter based on the selected tag as long as it si not all
+    elif selectedMetadataTag != MetadataTag('all'):
       self.templateList = self.db.FetchTemplatesForTag(str(selectedMetadataTag))
+
+    else: # ALL is the only one in the list, means the DB or that table is empty, redraw and exit.
+      self.repaint()
+      return
 
     # Clear the combo box and rebuild it with what we grabbed.
     self.templateComboBox.clear()

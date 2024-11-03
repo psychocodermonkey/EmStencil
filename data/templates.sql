@@ -66,6 +66,9 @@ create table tags (
   tag text constraint DuplicateTagViolation not null unique,
   dateAdded datetime,
   dateUpdated datetime
+  -- All has special use in the program, so do not want to allow it in the DB.
+  -- Making this a list of values in case expansion is needed later.
+  Constraint SpecialKeywordUsed check(lower(tag) not in ('all'))
 );
 
 -- Trigger for populating updated timestamp on tags.dateUpdated
@@ -143,4 +146,3 @@ Create View vw_Templates_Tags as
 -- Set databas options
 -- Foreign key enforcement is off by default, needs to be set on connect.
 -- Pragma foreign_keys = ON;
-
