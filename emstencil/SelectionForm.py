@@ -200,7 +200,7 @@ class TemplateSelector(QWidget):
     savedIndex = self.templateComboBox.currentIndex()
     self.templateComboBox.clear()
     for tmplt in self.templateList:
-      tmplt.clearFields
+      tmplt.clearFields()
       self.templateComboBox.addItem(str(tmplt), tmplt)
     self.templateComboBox.setCurrentIndex(savedIndex)
     self.textArea.setText(self.templateComboBox.currentData().content)
