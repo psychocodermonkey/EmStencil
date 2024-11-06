@@ -23,7 +23,7 @@
 import argparse
 import sqlite3
 from dataclasses import dataclass, field
-from sxl import Workbook, col2num  #type: ignore
+from sxl import Workbook, col2num
 
 
 # Global
@@ -33,7 +33,7 @@ parser = argparse.ArgumentParser()
 
 parser.add_argument(
   "--ddl", "-s",
-  default='data/templates.sql',
+  default='emstencil/templates.sql',
   required=False,
   help="Specify path for ddl file to build the bdatabase."
 )
@@ -55,7 +55,7 @@ args = parser.parse_args()
 
 # Define connection to database
 # TODO: Once TemplateDB object has write/add functionality need to re-write this module.
-database = sqlite3.connect(args.database)
+database =  sqlite3.connect(args.database)
 
 # constants - Define names for thigs we want to make easily modifiable
 Spreadsheet = {

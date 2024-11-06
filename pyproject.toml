@@ -26,7 +26,7 @@ license = { file = "LICENSE" }
 keywords = ["email", "template", "generator"]
 
 [project.gui-scripts]
-EmStencil-gui = "EmStencil:main"
+EmStencil-gui = "EmStencil:is_initilized"
 
 [tool.ruff]
 # Exclude a variety of commonly ignored directories.
@@ -65,6 +65,11 @@ indent-width = 2
 
 # Assume Python 3.8
 target-version = "py312"
+
+[tool.setuptools.package-data]
+EmStencil = [
+  "templates.sql"
+  ]
 
 [tool.ruff.lint]
 # Enable Pyflakes (`F`) and a subset of the pycodestyle (`E`)  codes by default.
