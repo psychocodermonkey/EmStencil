@@ -31,7 +31,10 @@ def createDirectory() -> bool:
   """
   if not DATADIR.exists():
     DATADIR.mkdir(parents=True, exist_ok=True)
-    print(f"Created data directory: {DATADIR}")
+    print(f"Created data directory: {Path(__file__).parent.joinpath(DATADIR)}")
+
+  else:
+    print(f"Data directory {Path(__file__).parent.joinpath(DATADIR)} found.")
 
   return DATADIR.exists()
 
@@ -43,7 +46,7 @@ def createDatabase() -> bool:
   schemaDDL = Path(__file__).parent.joinpath('templates.sql')
 
   if not DATABASE_FILE.exists():
-    print(f"Creating database: {DATABASE_FILE}")
+    print(f"Creating database: {Path(__file__).parent.joinpath(DATABASE_FILE)}")
     database =  sqlite3.connect(DATABASE_FILE)
     dbCursor = database.cursor()
 
@@ -52,7 +55,7 @@ def createDatabase() -> bool:
       dbCursor.executescript(fp.read())
 
   else:
-    print(f"Using existing database found at: {DATABASE_FILE}")
+    print(f"Using existing database found at: {Path(__file__).parent.joinpath(DATABASE_FILE)}")
 
   return DATABASE_FILE.exists()
 
