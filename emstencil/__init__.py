@@ -20,28 +20,5 @@
 ........1.........2.........3.........4.........5.........6.........7.........8.........9.........0.........1.........2.........3..
 """
 
-# from pathlib import Path
-from .Ubiquitous import DATADIR
-from .initialize import createDirectory, createDatabase, initilizeData
-from EmStencil import main
-
-def is_initilized() -> bool:
-  initilizeData()
-  databaseFile = DATADIR.joinpath('templates.db')
-
-  if not databaseFile.exists():
-    if not DATADIR.exists():
-      createDirectory()
-      createDatabase()
-    else:
-      createDatabase()
-  else:
-    print("All objects found.")
-
-  print("Launching application...")
-  main()
-
-  return True
-
-
-is_initilized()
+from .Ubiquitous import DATADIR, DATABASE_FILE
+from .initialize import is_initilized, createDirectory, createDatabase, initilizeData
