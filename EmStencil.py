@@ -79,12 +79,19 @@ def onExit() -> None:
   return
 
 
-# If the TemplateEmailBuilder.py is run (instead of imported as a module),
+# If the EmStencil.py is run (instead of imported as a module),
 # call the main() function:
 if __name__ == '__main__':
-# Register the function to execute on ending the script
+
+  from emstencil import is_initilized
+
+  # Register the function to execute on ending the script
   atexit.register(onExit)
 
-  parser = argparse.Argu
+  parser = argparse.ArgumentParser()
 
-  main()
+  if is_initilized():
+    print('Launching application...')
+    main()
+  else:
+    print("Initialization failed. Please check the logs.")
