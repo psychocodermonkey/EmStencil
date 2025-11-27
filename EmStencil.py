@@ -22,7 +22,9 @@
 
 # TODO: Implement update of templates instead of relying on reconverting from spreadsheet.
 # TODO: Need to handle if/when a meta tag exists in the database list but is not attached to any templates.
+# TODO: Implement argparse to be able to snag commands for (re)init, convert-spreadsheet etc.
 
+import argparse
 import sys
 import atexit
 from PySide6.QtWidgets import QApplication
@@ -44,18 +46,21 @@ def main() -> None:
   MetaTags[0].assocRowID = 0
   MetaTags = MetaTags + db.FetchAllMetadataTags()
 
-  # print results for what we grabbed.
-  template = TemplateList[0]
-  app = QApplication(sys.argv)
+  # If no templates were returned from the database, plug in a dummy template.
+  if len(TemplateList) == 0:
+    tag = emClasses.MetadataTag('None')
+    template = emClasses.EmailTemplate('--Empty List--', 'No templates loaded', [tag])
+    TemplateList.append(template)
 
   # Find the template with the most number of fields.
-  for tmplt in TemplateList:
-    if len(tmplt.fields) > len(template.fields):
-      template = tmplt
+  # template = TemplateList[0]
+  # for tmplt in TemplateList:
+  #   if len(tmplt.fields) > len(template.fields):
+  #     template = tmplt
 
-  # Execute the screen to get the user data.
+  # Build the app object, populate the screen and show the main window.
+  app = QApplication(sys.argv)
   screen = emMain.EmStencil(TemplateList, MetaTags)
-
   screen.show()
 
   sys.exit(app.exec())
@@ -79,4 +84,7 @@ def onExit() -> None:
 if __name__ == '__main__':
 # Register the function to execute on ending the script
   atexit.register(onExit)
+
+  parser = argparse.Argu
+
   main()

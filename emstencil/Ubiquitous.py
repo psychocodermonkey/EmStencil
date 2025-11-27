@@ -1,9 +1,8 @@
 """
- Program: Initilization routine for application
-
-    Name: Andrew Dixon            File: __init__.py
-    Date: 23 Nov 2023
-   Notes:
+ Program: Ubiquitous items for all files.
+    Name: Andrew Dixon            File: Ubiquitous.py
+    Date: 6 Nov 2024
+   Notes: Single point of declaration of items used across all files.
 
     Copyright (C) 2023  Andrew Dixon
 
@@ -20,28 +19,8 @@
 ........1.........2.........3.........4.........5.........6.........7.........8.........9.........0.........1.........2.........3..
 """
 
-# from pathlib import Path
-from .Ubiquitous import DATADIR
-from .initialize import createDirectory, createDatabase, initilizeData
-from EmStencil import main
-
-def is_initilized() -> bool:
-  initilizeData()
-  databaseFile = DATADIR.joinpath('templates.db')
-
-  if not databaseFile.exists():
-    if not DATADIR.exists():
-      createDirectory()
-      createDatabase()
-    else:
-      createDatabase()
-  else:
-    print("All objects found.")
-
-  print("Launching application...")
-  main()
-
-  return True
+from pathlib import Path
 
 
-is_initilized()
+DATADIR = Path('data/')                                     # Data directory for required items.
+DATABASE_FILE = DATADIR.joinpath("templates.db")             # Template database storage.

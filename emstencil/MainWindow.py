@@ -1,4 +1,3 @@
-#! /usr/bin/env python3
 """
  Program: Main window for application.
     Name: Andrew Dixon            File: MainWindow.py

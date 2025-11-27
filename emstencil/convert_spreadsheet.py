@@ -1,4 +1,3 @@
-#! /usr/bin/env python3
 """
  Program: Setup the SQLite3 Database and convert, if necessary, from an Excel spreadsheet.
     Name: Andrew Dixon            File: setup.py
@@ -23,7 +22,7 @@
 import argparse
 import sqlite3
 from dataclasses import dataclass, field
-from sxl import Workbook
+from sxl import Workbook, col2num
 
 
 # Global
@@ -33,7 +32,7 @@ parser = argparse.ArgumentParser()
 
 parser.add_argument(
   "--ddl", "-s",
-  default='data/templates.sql',
+  default='emstencil/templates.sql',
   required=False,
   help="Specify path for ddl file to build the bdatabase."
 )
@@ -55,7 +54,7 @@ args = parser.parse_args()
 
 # Define connection to database
 # TODO: Once TemplateDB object has write/add functionality need to re-write this module.
-database = sqlite3.connect(args.database)
+database =  sqlite3.connect(args.database)
 
 # constants - Define names for thigs we want to make easily modifiable
 Spreadsheet = {
@@ -83,7 +82,7 @@ class XlatedRow:
   title: str
   content: str
   tags: list
-  rowID: int = field(init=False)
+  rowID: int | None = field(init=False)
 
   def __post_init__(self):
     """Do some clean up to ensure data is as enforcably consistent as we can make it safely."""
@@ -106,13 +105,15 @@ class XlatedRow:
 def convertSpreadsheet(Spreadsheet: dict) -> None:
   """Code for converting spreadsheet into SQLite3 Database."""
   # -- Local variables (work and otherwise)
-  TemplateRows = []
-  tagsToCreate = set()
-  TagIDs = {}
+  TemplateRows: list = []
+  tagsToCreate: set = set()
+  TagIDs: dict = {}
 
   # Functions to convert column letters to numbers and vice-versa. Using lambda because I like this as an example.
-  colNum = lambda a: 0 if a == '' else 1 + ord(a[-1]) - ord('A') + 26 * colNum(a[:-1])  # noqa: E731
-  colName = lambda n: '' if n <= 0 else colName((n - 1) // 26) + chr((n - 1) % 26 + ord('A'))  # noqa: E731
+  #  Converted the functions from sxl to lambda just as an example. moving over to using sxl built ins.
+  #  Leaving this "comment" here to have them documented becasue they're still pretty neat lambda's.
+  # colNum = lambda a: 0 if a == '' else 1 + ord(a[-1]) - ord('A') + 26 * colNum(a[:-1])  # noqa: E731
+  # colName = lambda n: '' if n <= 0 else colName((n - 1) // 26) + chr((n - 1) % 26 + ord('A'))  # noqa: E731
 
   # Delete all values from all tables.
   # clearTables()
@@ -130,9 +131,9 @@ def convertSpreadsheet(Spreadsheet: dict) -> None:
     # Build our object from the spreadsheet.
     # Be sure to subtract one since the column conversion is not zero based.
     row = XlatedRow(
-      title=row[colNum('A') - 1].strip(),
-      content=row[colNum('B') - 1].strip(),
-      tags=row[colNum('C') - 1].split(',')
+      title=row[col2num('A') - 1].strip(),
+      content=row[col2num('B') - 1].strip(),
+      tags=row[col2num('C') - 1].split(',')
     )
 
     # Add the templates to the database, store their RowID. Add its tags to the set.
@@ -140,10 +141,13 @@ def convertSpreadsheet(Spreadsheet: dict) -> None:
     tagsToCreate = tagsToCreate | set(row.tags)
 
   # Sort tags to be created, also converts set to list object.
-  tagsToCreate = sorted(tagsToCreate)
+  tagsList = sorted(tagsToCreate)
+
+  # Free memory of tags to create since we won't be using it again. (?? Good practice ??)
+  del tagsToCreate
 
   # Build the tags table, saving the RowIDs used for each tag for use later.
-  for tag in tagsToCreate:
+  for tag in tagsList:
     # Use dictionary comprehension to replace the dictionary.
     TagIDs = {**TagIDs, tag: addTagRow(tag)}
 
@@ -167,7 +171,7 @@ def clearTables() -> None:
   cursor.execute("delete from templates")
 
 
-def addTemplateRow(row: XlatedRow) -> XlatedRow:
+def addTemplateRow(row: XlatedRow) -> XlatedRow | None:
   """Add Template content rows to the templates table in the database.
      Returns the row it just added updated with it's current rowID in the database."""
   cursor = database.cursor()
@@ -182,7 +186,7 @@ def addTemplateRow(row: XlatedRow) -> XlatedRow:
   return row
 
 
-def addTagRow(tag: str) -> int:
+def addTagRow(tag: str) -> int | None:
   """Add Tag content rows to the tags table in the database.
      Returns the rowID for what it just added."""
   cursor = database.cursor()

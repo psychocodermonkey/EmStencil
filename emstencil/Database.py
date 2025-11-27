@@ -1,4 +1,3 @@
-#! /usr/bin/env python3
 """
  Program: Database singleton class for database management.
     Name: Andrew Dixon            File: TemplateDB.py
@@ -19,10 +18,12 @@
     If not, see <https://www.gnu.org/licenses/>.
 ........1.........2.........3.........4.........5.........6.........7.........8.........9.........0.........1.........2.........3..
 """
+
 # TODO: Implement update, insert methods for the database.
 
 import sqlite3
 from emstencil import Dataclasses as emClasses
+from .Ubiquitous import DATABASE_FILE
 from .Dataclasses import State
 
 
@@ -38,12 +39,12 @@ class TemplateDB:
 
   def __init__(self):
     """New instance of database connection."""
-    self.DB = sqlite3.connect('data/templates.db')
+    self.DB = sqlite3.connect(DATABASE_FILE)
 
     # Be sure to enable foreign keys on database
     self.DB.execute("pragma foreign_keys = ON")
 
-  def getConnection(self) -> sqlite3.connect:
+  def getConnection(self) -> sqlite3.Connection:
     """Return connection to the database if special queries are needed."""
     return self.DB
 

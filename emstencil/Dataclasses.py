@@ -1,4 +1,3 @@
-#! /usr/bin/env python3
 """
  Program: Dataclasses for email template application
     Name: Andrew Dixon            File: TemplateDataClasses.py
@@ -101,7 +100,7 @@ class EmailTemplate:
     """Post initilization build internal requirements for template object."""
     # RegEx to match fields in the ${field} format, grabbing only the text
     wkFields = re.findall(r'\$\{(.*?)\}', self.content)
-    self.fields = dict(zip(wkFields, [None]*len(wkFields)))
+    self.fields = dict(zip(wkFields, [None]*len(wkFields), strict=True))
 
   def __str__(self) -> str:
     """User friendly string representation. (user)"""
