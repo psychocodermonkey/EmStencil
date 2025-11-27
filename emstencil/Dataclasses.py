@@ -1,4 +1,3 @@
-#! /usr/bin/env python3
 """
  Program: Dataclasses for email template application
     Name: Andrew Dixon            File: TemplateDataClasses.py

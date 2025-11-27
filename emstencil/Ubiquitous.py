@@ -1,4 +1,3 @@
-#! /usr/bin/env python3
 """
  Program: Ubiquitous items for all files.
     Name: Andrew Dixon            File: Ubiquitous.py

@@ -1,4 +1,3 @@
-#! /usr/bin/env python3
 """
  Program: Form for editing the fields for the given Email template
     Name: Andrew Dixon            File: FieldEntryDialog.py

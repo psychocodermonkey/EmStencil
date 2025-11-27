@@ -1,4 +1,3 @@
-#! /usr/bin/env python3
 """
  Program: Using SQLite to fetch items from the DB and load them into their respective objects
     Name: Andrew Dixon            File: TemplateSelectorWindow.py

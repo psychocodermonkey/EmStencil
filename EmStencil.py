@@ -22,7 +22,9 @@
 
 # TODO: Implement update of templates instead of relying on reconverting from spreadsheet.
 # TODO: Need to handle if/when a meta tag exists in the database list but is not attached to any templates.
+# TODO: Implement argparse to be able to snag commands for (re)init, convert-spreadsheet etc.
 
+import argparse
 import sys
 import atexit
 from PySide6.QtWidgets import QApplication
@@ -82,4 +84,7 @@ def onExit() -> None:
 if __name__ == '__main__':
 # Register the function to execute on ending the script
   atexit.register(onExit)
+
+  parser = argparse.Argu
+
   main()

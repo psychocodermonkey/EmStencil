@@ -1,4 +1,3 @@
-#! /usr/bin/env python3
 """
  Program: Setup the SQLite3 Database and convert, if necessary, from an Excel spreadsheet.
     Name: Andrew Dixon            File: setup.py

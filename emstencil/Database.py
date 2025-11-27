@@ -1,4 +1,3 @@
-#! /usr/bin/env python3
 """
  Program: Database singleton class for database management.
     Name: Andrew Dixon            File: TemplateDB.py
@@ -19,6 +18,7 @@
     If not, see <https://www.gnu.org/licenses/>.
 ........1.........2.........3.........4.........5.........6.........7.........8.........9.........0.........1.........2.........3..
 """
+
 # TODO: Implement update, insert methods for the database.
 
 import sqlite3

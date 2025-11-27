@@ -1,4 +1,3 @@
-#! /usr/bin/env python3
 """
  Program: Base custom exception classes.
     Name: Andrew Dixon            File: exceptions.py
