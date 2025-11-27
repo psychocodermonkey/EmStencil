@@ -9,3 +9,8 @@ dependencies = [
     "pyside6>=6.10.1",
     "sxl>=0.0.1a10",
 ]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.1",
+]
