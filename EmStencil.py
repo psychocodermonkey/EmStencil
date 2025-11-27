@@ -79,12 +79,12 @@ def onExit() -> None:
   return
 
 
-# If the TemplateEmailBuilder.py is run (instead of imported as a module),
+# If the EmStencil.py is run (instead of imported as a module),
 # call the main() function:
 if __name__ == '__main__':
-  #from emstencil.initialize import initilizeData
-  #initilizeData()
+
   from emstencil import is_initilized
+
   # Register the function to execute on ending the script
   atexit.register(onExit)
 
