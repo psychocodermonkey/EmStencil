@@ -26,6 +26,8 @@
 
 import sys
 import atexit
+from pathlib import Path
+from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QApplication
 from emstencil import Database as emDB
 from emstencil import MainWindow as emMain
@@ -34,8 +36,12 @@ from emstencil import LOGGER
 
 def main() -> None:
   """Main function for program start."""
+
+  icon_path = Path(__file__).parent / "assets" / "EmStencil_Dark.ico"
+
   # Build the app object, populate the screen and show the main window.
   app = QApplication(sys.argv)
+  app.setWindowIcon(QIcon(str(icon_path)))
   screen = emMain.EmStencil()
   screen.show()
 
