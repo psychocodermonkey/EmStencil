@@ -19,7 +19,6 @@
 ........1.........2.........3.........4.........5.........6.........7.........8.........9.........0.........1.........2.........3..
 """
 
-import logging
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QFontMetrics, QKeySequence, QShortcut
 from PySide6.QtWidgets import QApplication, QMessageBox, QWidget, QHBoxLayout, QVBoxLayout
@@ -27,6 +26,7 @@ from PySide6.QtWidgets import QLabel, QPushButton, QTextEdit, QComboBox
 from .Database import TemplateDB
 from .FieldEntryDialog import FieldEntryDialog
 from .Dataclasses import EmailTemplate, MetadataTag
+from .Logging import LOGGER
 
 
 class TemplateSelector(QWidget):
@@ -237,5 +237,5 @@ class TemplateSelector(QWidget):
 
   def exitClicked(self) -> None:
     """Close the form/application by triggering close from the parent."""
-    logging.info('Application close.')
+    LOGGER.info('Application close.')
     self.parent.closeWindow()

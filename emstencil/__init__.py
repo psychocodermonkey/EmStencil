@@ -22,3 +22,4 @@
 
 from .Ubiquitous import DATADIR, DATABASE_FILE
 from .initialize import is_initilized
+from .Logging import LOGGER

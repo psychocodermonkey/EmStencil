@@ -60,7 +60,7 @@ class EmStencil(QMainWindow):
     # selectionForm = TemplateSelector(templateList, metaTags, parent=self)
     self.setCentralWidget(loadTemplateSelector(self))
 
-  def importTemplate(self):
+  def importTemplate(self) -> None:
     if importTemplates(self):
       # Remove old widget
       old_widget = self.takeCentralWidget()

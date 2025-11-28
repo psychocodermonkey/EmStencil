@@ -23,6 +23,7 @@
 import sqlite3
 from pathlib import Path
 from .Ubiquitous import DATADIR, DATABASE_FILE
+from .Logging import LOGGER
 
 
 def is_initilized() -> bool:
@@ -36,7 +37,7 @@ def is_initilized() -> bool:
     else:
       createDatabase()
   else:
-    print('All objects found.')
+    LOGGER.info('All objects found.')
 
   return True
 
@@ -47,10 +48,10 @@ def createDirectory() -> bool:
   """
   if not DATADIR.exists():
     DATADIR.mkdir(parents=True, exist_ok=True)
-    print(f"Created data directory: {Path(__file__).parent.joinpath(DATADIR)}")
+    LOGGER.info(f"Created data directory: {Path(__file__).parent.joinpath(DATADIR)}")
 
   else:
-    print(f"Data directory {Path(__file__).parent.joinpath(DATADIR)} found.")
+    LOGGER.info(f"Data directory {Path(__file__).parent.joinpath(DATADIR)} found.")
 
   return DATADIR.exists()
 
@@ -62,16 +63,16 @@ def createDatabase() -> bool:
   schemaDDL = Path(__file__).parent.joinpath('templates.sql')
 
   if not DATABASE_FILE.exists():
-    print(f"Creating database: {Path(__file__).parent.joinpath(DATABASE_FILE)}")
+    LOGGER.info(f"Creating database: {Path(__file__).parent.joinpath(DATABASE_FILE)}")
     database =  sqlite3.connect(DATABASE_FILE)
     dbCursor = database.cursor()
 
-    print(f"Reading internal schema file ({schemaDDL}) for database...")
+    LOGGER.info(f"Reading internal schema file ({schemaDDL}) for database...")
     with open(schemaDDL) as fp:
       dbCursor.executescript(fp.read())
 
   else:
-    print(f"Using existing database found at: {Path(__file__).parent.joinpath(DATABASE_FILE)}")
+    LOGGER.info(f"Using existing database found at: {Path(__file__).parent.joinpath(DATABASE_FILE)}")
 
   return DATABASE_FILE.exists()
 
@@ -82,13 +83,13 @@ def initilizeData() -> bool:
   """
   if createDirectory():
     if createDatabase():
-      print("All setup processes completed normally.")
+      LOGGER.info("All setup processes completed normally.")
 
     else:
-      print("Error during createDatabase.")
+      LOGGER.info("Error during createDatabase.")
 
   else:
-    print("Error creating data directory.")
+    LOGGER.info("Error creating data directory.")
     return False
 
   return True

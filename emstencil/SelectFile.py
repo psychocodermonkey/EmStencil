@@ -66,7 +66,7 @@ class FileSelectionDialog(QDialog):
     self.btn_ok.clicked.connect(self.accept)
     self.btn_cancel.clicked.connect(self.reject)
 
-  def openFileDialog(self):
+  def openFileDialog(self) -> None:
     file_name, _ = QFileDialog.getOpenFileName(
       self, 'Select Template File', '', 'All Files (*);;Excel Files (*.xlsx)'
     )
@@ -74,7 +74,7 @@ class FileSelectionDialog(QDialog):
       self.selected_file = file_name
       self.path_display.setText(file_name)
 
-  def accept(self):
+  def accept(self) -> None:
     if self.selected_file:
       super().accept()
     else:

@@ -25,7 +25,7 @@ from emstencil import Dataclasses as emClasses
 from emstencil.SelectionForm import TemplateSelector
 
 
-def loadTemplateSelector(parent=None):
+def loadTemplateSelector(parent=None) -> TemplateSelector:
   db = emDB.TemplateDB()
   templateList = db.FetchAllTemplates()
   templateList = list(map(db.FetchMetadataForTemplate, templateList))

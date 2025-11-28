@@ -19,12 +19,12 @@
 ........1.........2.........3.........4.........5.........6.........7.........8.........9.........0.........1.........2.........3..
 """
 
-
 import sqlite3
 from dataclasses import dataclass, field
 from sxl import Workbook, col2num
 from PySide6.QtWidgets import QMessageBox
 from .SelectFile import FileSelectionDialog
+from .Logging import LOGGER
 
 # TODO: Once TemplateDB object has write/add functionality need to re-write this module.
 
@@ -55,9 +55,9 @@ def appConvertSpreadsheet(xls_path, datadir, database) -> bool:
   """appConvertSpreadsheet - Convert xlsx spreadsheet from within application."""
   global DATABASE
 
-  print(f'Selected file: {xls_path}')
-  print(f'Global data dir is: {datadir}')
-  print(f'Global database path is: {database}')
+  LOGGER.info(f'Selected file: {xls_path}')
+  LOGGER.info(f'Global data dir is: {datadir}')
+  LOGGER.info(f'Global database path is: {database}')
   DATABASE = sqlite3.connect(database)
 
   dbCursor = DATABASE.cursor()
@@ -159,8 +159,8 @@ def convertSpreadsheet(Spreadsheet: dict) -> bool:
     for tag in tmplt.tags:
       addTemplateTagsRow(tmplt.rowID, TagIDs[tag] )
 
-  print(f'Number of templates added: {len(TemplateRows)}')
-  print(f'Number of tags added: {len(TagIDs)}')
+  LOGGER.info(f'Number of templates added: {len(TemplateRows)}')
+  LOGGER.info(f'Number of tags added: {len(TagIDs)}')
 
   return len(TemplateRows) > 0
 

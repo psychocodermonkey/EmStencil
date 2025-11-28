@@ -29,6 +29,7 @@ import atexit
 from PySide6.QtWidgets import QApplication
 from emstencil import Database as emDB
 from emstencil import MainWindow as emMain
+from emstencil import LOGGER
 
 
 def main() -> None:
@@ -50,7 +51,7 @@ def onExit() -> None:
 
   except Exception as e:
     # Exit, printing any error that happens on exit.
-    print(f'ERROR on exit: {e}')
+    LOGGER.error(f'ERROR on exit: {e}')
   return
 
 
@@ -64,7 +65,7 @@ if __name__ == '__main__':
   atexit.register(onExit)
 
   if is_initilized():
-    print('Launching application...')
+    LOGGER.info('Launching application...')
     main()
   else:
-    print("Initialization failed. Please check the logs.")
+    LOGGER.error("Initialization failed. Please check the logs.")
