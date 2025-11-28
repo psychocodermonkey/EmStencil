@@ -28,12 +28,13 @@
 
 from PySide6.QtGui import QAction
 from PySide6.QtWidgets import QMainWindow, QMenu
-from .SelectionForm import TemplateSelector
+from .ImportTemplates import importTemplates
+from emstencil.TemplateLoader import loadTemplateSelector
 
 
 class EmStencil(QMainWindow):
   """Class for main window for selecting and working with templates."""
-  def __init__(self, templateList: list, metaTags: list) -> None:
+  def __init__(self) -> None:
     super(EmStencil, self).__init__()
 
     # Set up the menu bar and make sure it is attached to the window.
@@ -42,14 +43,31 @@ class EmStencil(QMainWindow):
 
     # Define the file menu actions and add them to the file menu on the main menubar
     menu = QMenu('File', self)
+
+    # Import template menu item
+    fileImport = QAction('Import Template...', self)
+    fileImport.triggered.connect(self.importTemplate)
+    menu.addAction(fileImport)
+
+    # Exit application menu item.
     fileExit = QAction('Exit', self)
     fileExit.triggered.connect(self.closeWindow)
     menu.addAction(fileExit)
+
     self.menubar.addMenu(menu)
 
     # Create instance of application widget and add to main window.
-    selectionForm = TemplateSelector(templateList, metaTags, parent=self)
-    self.setCentralWidget(selectionForm)
+    # selectionForm = TemplateSelector(templateList, metaTags, parent=self)
+    self.setCentralWidget(loadTemplateSelector(self))
+
+  def importTemplate(self):
+    if importTemplates(self):
+      # Remove old widget
+      old_widget = self.takeCentralWidget()
+      if old_widget:
+        old_widget.deleteLater()
+
+      self.setCentralWidget(loadTemplateSelector(self))
 
   def closeWindow(self) -> None:
     """Close the window."""
