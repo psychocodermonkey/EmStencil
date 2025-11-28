@@ -25,6 +25,22 @@ from pathlib import Path
 from .Ubiquitous import DATADIR, DATABASE_FILE
 
 
+def is_initilized() -> bool:
+  initilizeData()
+  databaseFile = DATADIR.joinpath('templates.db')
+
+  if not databaseFile.exists():
+    if not DATADIR.exists():
+      createDirectory()
+      createDatabase()
+    else:
+      createDatabase()
+  else:
+    print('All objects found.')
+
+  return True
+
+
 def createDirectory() -> bool:
   """
   Create the data directory if it does not exist.
@@ -79,4 +95,4 @@ def initilizeData() -> bool:
 
 
 if __name__ == "__main__":
-  initilizeData()
+  is_initilized()
