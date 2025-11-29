@@ -29,7 +29,7 @@
 from PySide6.QtGui import QAction, QIcon
 from PySide6.QtWidgets import QMainWindow, QMenu
 from .ImportTemplates import importTemplates
-from emstencil.TemplateLoader import loadTemplateSelector
+from .TemplateLoader import loadTemplateSelector
 
 
 class EmStencil(QMainWindow):

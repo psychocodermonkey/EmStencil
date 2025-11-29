@@ -21,7 +21,7 @@
 """
 
 import logging
-from emstencil import DATADIR, DATABASE_FILE
+from emstencil import DATADIR
 
 
 LOGFILE = f'{DATADIR}/runlog.log'

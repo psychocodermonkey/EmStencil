@@ -22,7 +22,7 @@
 
 from emstencil import Database as emDB
 from emstencil import Dataclasses as emClasses
-from emstencil.SelectionForm import TemplateSelector
+from .SelectionForm import TemplateSelector
 
 
 def loadTemplateSelector(parent=None) -> TemplateSelector:

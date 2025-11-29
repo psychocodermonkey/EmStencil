@@ -37,7 +37,14 @@ from emstencil import LOGGER
 def main() -> None:
   """Main function for program start."""
 
-  icon_path = Path(__file__).parent / "assets" / "EmStencil_Dark.ico"
+  if getattr(sys, 'frozen', False):
+      base_path = Path(sys.argv[0]).parent  # location of compiled app
+  else:
+      base_path = Path(__file__).parent     # normal source layout
+
+  icon_path = base_path / "assets" / "EmStencil_Dark.ico"
+
+  # icon_path = Path(__file__).parent / "assets" / "EmStencil_Dark.ico"
 
   # Build the app object, populate the screen and show the main window.
   app = QApplication(sys.argv)
