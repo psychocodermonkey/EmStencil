@@ -26,6 +26,7 @@
 
 import sys
 import atexit
+import platform
 from pathlib import Path
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QApplication
@@ -37,12 +38,17 @@ from emstencil import LOGGER
 def main() -> None:
   """Main function for program start."""
 
+  # Handle finding the application icon correctly from packaged or source layouts.
   if getattr(sys, 'frozen', False):
       base_path = Path(sys.argv[0]).parent  # location of compiled app
   else:
       base_path = Path(__file__).parent     # normal source layout
 
-  icon_path = base_path / "assets" / "EmStencil_Dark.ico"
+  # Detect platform and set the application icon appropriately.
+  if platform.system() == "Darwin":
+    icon_path = base_path / 'assets' / 'EmStencil_Dark.icns'
+  else:
+    icon_path = base_path / "assets" / "EmStencil_Dark.ico"
 
   # icon_path = Path(__file__).parent / "assets" / "EmStencil_Dark.ico"
 
