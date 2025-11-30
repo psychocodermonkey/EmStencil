@@ -50,3 +50,14 @@ class AccessNullRowID(Exception):
   def __init__(self, *args: object) -> None:
     self.message = 'Attempted to use rowID without first setting it'
     super().__init__(self.message)
+
+
+class DatabaseDDLSourceMissing(Exception):
+  """
+  ## Exception for when trying to locate and load the DDL to create the database is missing.
+    - Exception thrown when trying to build/create the database definition, usually on first run.
+  """
+  def __init__(self, value: str) -> None:
+    self.path = value
+    self.message = f'Attempted to load DDL definition file at {self.path}, DDL file not found!'
+    super().__init__(self.message)

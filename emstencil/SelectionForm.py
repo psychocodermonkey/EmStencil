@@ -67,6 +67,7 @@ class TemplateSelector(QWidget):
 
     # Add buttons to the main layout
     self.layout.addLayout(self.buildButtons())
+    LOGGER.info("Template selection __init__ completed.")
 
   def buildTemplateSelectGroup(self) -> None:
     """Build the boxes to filter out and select what template to work with."""
@@ -102,6 +103,7 @@ class TemplateSelector(QWidget):
 
     # Add the template selection group to the main layout.
     self.layout.addLayout(self.templateSelectionGroup)
+    LOGGER.info("Template selection group added to main layout.")
 
   def buildComboBoxData(self, items: list) -> QComboBox:
     """Build a combo box widget from a list of EmailTemplate/MetadataTag objects."""
@@ -188,6 +190,7 @@ class TemplateSelector(QWidget):
     userMessage.setIcon(QMessageBox.Icon.Information)
     userMessage.setWindowTitle("Information")
     userMessage.setText(msg)
+    LOGGER.info(msg)
     userMessage.exec()
 
   def sendUserErrorMessage(self, msg: str) -> None:
@@ -196,6 +199,7 @@ class TemplateSelector(QWidget):
     userMessage.setIcon(QMessageBox.Icon.Critical)
     userMessage.setWindowTitle("Error")
     userMessage.setText(msg)
+    LOGGER.error(msg)
     userMessage.exec()
 
   def resetTemplates(self) -> None:
@@ -214,6 +218,7 @@ class TemplateSelector(QWidget):
     selectedEmailTemplate = self.templateComboBox.currentData()
     if len(selectedEmailTemplate.fields) > 0:
       self.editScreen = FieldEntryDialog(selectedEmailTemplate, parent=self)
+      LOGGER.info("Displaying field entry dialog...")
       self.editScreen.show()
     else:
       self.sendUserInfoMessage("Template has no fields defined.")
@@ -233,9 +238,10 @@ class TemplateSelector(QWidget):
     if selectedEmailTemplate.fieldsSet:
       self.clipboard.setText(selectedEmailTemplate.replacedText)
     else:
+      LOGGER.info('All values must be entered for template to be copied to clipboard...')
       self.sendUserInfoMessage("You must enter values for all fields in the template.")
 
   def exitClicked(self) -> None:
     """Close the form/application by triggering close from the parent."""
-    LOGGER.info('Application close.')
+    LOGGER.info('Application close...')
     self.parent.closeWindow()

@@ -21,17 +21,15 @@
 """
 
 import logging
-from emstencil import DATADIR
+from emstencil import LOG_PATH
 
-
-LOGFILE = f'{DATADIR}/runlog.log'
 
 # Configure logging
 logging.basicConfig(
     level=logging.DEBUG,  # Capture all levels
     format="%(asctime)s - %(levelname)s - %(message)s",
     handlers=[
-        logging.FileHandler(LOGFILE, mode="w"),  # Overwrite each run
+        logging.FileHandler(LOG_PATH, mode="w"),  # Overwrite each run
         logging.StreamHandler()  # Defaults to stderr; we'll filter below
     ]
 )

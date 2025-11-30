@@ -30,6 +30,7 @@ from PySide6.QtGui import QAction
 from PySide6.QtWidgets import QMainWindow, QMenu
 from .ImportTemplates import importTemplates
 from .TemplateLoader import loadTemplateSelector
+from .Logging import LOGGER
 
 
 class EmStencil(QMainWindow):
@@ -62,6 +63,7 @@ class EmStencil(QMainWindow):
     # Create instance of application widget and add to main window.
     # selectionForm = TemplateSelector(templateList, metaTags, parent=self)
     self.setCentralWidget(loadTemplateSelector(self))
+    LOGGER.info("MainWindow initialized successfully.")
 
   def importTemplate(self) -> None:
     if importTemplates(self):
@@ -69,8 +71,10 @@ class EmStencil(QMainWindow):
       old_widget = self.takeCentralWidget()
       if old_widget:
         old_widget.deleteLater()
+        LOGGER.info("Releasing old central widget.")
 
       self.setCentralWidget(loadTemplateSelector(self))
+      LOGGER.info("New template selector loaded successfully.")
 
   def closeWindow(self) -> None:
     """Close the window."""

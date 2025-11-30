@@ -36,17 +36,19 @@ DATABASE = ''
 def importTemplates(parent) -> bool:
   """importTemplates - Function wrapper to be called from within the application template import."""
   # Be sure to drag in the global data paths.
-  from emstencil import DATADIR, DATABASE_FILE
+  from emstencil import DATA_DIR, DATABASE_FILE
 
   success = False
 
   dialog = FileSelectionDialog(parent)
   if dialog.exec():  # User pressed OK
     file_path = dialog.selected_file
-    success = appConvertSpreadsheet(file_path, DATADIR, DATABASE_FILE)
+    success = appConvertSpreadsheet(file_path, DATA_DIR, DATABASE_FILE)
+    LOGGER.info("Template import completed...")
 
   else:
     QMessageBox.information(parent, 'Canceled', 'No file selected.')
+    LOGGER.info("Template imort cancled...")
 
   return success
 
@@ -129,6 +131,7 @@ def convertSpreadsheet(Spreadsheet: dict) -> bool:
 
     # Skip column headings row if we're told about it.
     if Spreadsheet['hasColHdg'] and rownum == 0:
+      LOGGER.info("Skipping column headings from spreadsheet...")
       continue
 
     # Build our object from the spreadsheet.
@@ -143,8 +146,12 @@ def convertSpreadsheet(Spreadsheet: dict) -> bool:
     TemplateRows.append(addTemplateRow(row))
     tagsToCreate = tagsToCreate | set(row.tags)
 
+  # Log how many rows were in the spreadsheet.
+  LOGGER.info(f"{len(TemplateRows)} templates loaded from spreadsheet.")
+
   # Sort tags to be created, also converts set to list object.
   tagsList = sorted(tagsToCreate)
+  LOGGER.info(f"{len(tagsList)} unique metadata tags in spreadsheet.")
 
   # Free memory of tags to create since we won't be using it again. (?? Good practice ??)
   del tagsToCreate
@@ -175,6 +182,7 @@ def clearTables() -> None:
   cursor.execute("delete from templateTags")
   cursor.execute("delete from tags")
   cursor.execute("delete from templates")
+  LOGGER.info("Database tables cleared...")
 
 
 def addTemplateRow(row: XlatedRow) -> XlatedRow | None:

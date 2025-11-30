@@ -50,23 +50,6 @@ Clicking Submit on the field entry dialog will return to the main window. The te
   - Moving the app to `/Applicatons` the application cannot write within it's app directory.
   - Solution is to leverage `user` storage locations for the DB and logging rather than just using the app directory.
 
-## Building app
-
-### MacOS
-
-To build for macOS using Nuitka the following command places everything in the `build/` directory. This will also create a `.app` file in `build/`.
-
-``` sh
-uv run nuitka \
-  EmStencil.py \
-  --standalone \
-  --enable-plugin=pyside6 \
-  --include-qt-plugins=sensible \
-  --macos-create-app-bundle \
-  --macos-app-icon=assets/EmStencil_Dark.icns \
-  --output-dir=build
-```
-
 ## License
 
 Distrubuted under the GPLv3 see LICENSE for more information.
