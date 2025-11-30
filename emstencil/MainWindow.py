@@ -26,7 +26,7 @@
 #         Edit> Template?
 #         Help> Instructions | About
 
-from PySide6.QtGui import QAction, QIcon
+from PySide6.QtGui import QAction
 from PySide6.QtWidgets import QMainWindow, QMenu
 from .ImportTemplates import importTemplates
 from .TemplateLoader import loadTemplateSelector
@@ -37,8 +37,8 @@ class EmStencil(QMainWindow):
   def __init__(self) -> None:
     super(EmStencil, self).__init__()
 
-    # Set window icon
-    self.setWindowIcon(QIcon("../assets/EmStencil_Dark.ico"))
+    # Set window title
+    self.setWindowTitle("EmStencil")
 
     # Set up the menu bar and make sure it is attached to the window.
     self.menubar = self.menuBar()

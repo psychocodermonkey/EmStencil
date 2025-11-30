@@ -26,6 +26,7 @@
 
 import sys
 import atexit
+import ctypes
 import platform
 from pathlib import Path
 from PySide6.QtGui import QIcon
@@ -47,6 +48,11 @@ def main() -> None:
   # Detect platform and set the application icon appropriately.
   if platform.system() == "Darwin":
     icon_path = base_path / 'assets' / 'EmStencil_Dark.icns'
+
+  elif platform.system() == "Windows":
+    ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID('EmStencil.App')
+    icon_path = base_path / 'assets' / 'EmStencil_Dark.ico'
+
   else:
     icon_path = base_path / "assets" / "EmStencil_Dark.ico"
 
