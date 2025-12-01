@@ -51,7 +51,7 @@ def importTemplates(parent) -> bool:
 
   else:
     QMessageBox.information(parent, 'Canceled', 'No file selected.')
-    LOGGER.info("Template imort cancled...")
+    LOGGER.info("Template import canceled...")
 
   return success
 
