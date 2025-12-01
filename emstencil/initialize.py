@@ -2,10 +2,10 @@
  Program: Database singleton class for database management.
 
     Name: Andrew Dixon            File: __init__.py
-    Date: 6 Nov 2025
+    Date: 6 Nov 2023
    Notes:
 
-    Copyright (C) 2023  Andrew Dixon
+    Copyright (C) 2023-2025  Andrew Dixon
 
     This program is free software: you can redistribute it and/or modify  it under the terms of the GNU
     General Public License as published by the Free Software Foundation, either version 3 of the License,
@@ -20,18 +20,20 @@
 ........1.........2.........3.........4.........5.........6.........7.........8.........9.........0.........1.........2.........3..
 """
 
+import sys
 import sqlite3
 from pathlib import Path
-from .Ubiquitous import DATADIR, DATABASE_FILE
+from emstencil import DATA_DIR, DATABASE_FILE
 from .Logging import LOGGER
+from .Exceptions import DatabaseDDLSourceMissing
 
 
 def is_initilized() -> bool:
   initilizeData()
-  databaseFile = DATADIR.joinpath('templates.db')
+  databaseFile = DATA_DIR.joinpath('templates.db')
 
   if not databaseFile.exists():
-    if not DATADIR.exists():
+    if not DATA_DIR.exists():
       createDirectory()
       createDatabase()
     else:
@@ -46,21 +48,53 @@ def createDirectory() -> bool:
   """
   Create the data directory if it does not exist.
   """
-  if not DATADIR.exists():
-    DATADIR.mkdir(parents=True, exist_ok=True)
-    LOGGER.info(f"Created data directory: {Path(__file__).parent.joinpath(DATADIR)}")
+  if not DATA_DIR.exists():
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    LOGGER.info(f"Created data directory: {Path(__file__).parent.joinpath(DATA_DIR)}")
 
   else:
-    LOGGER.info(f"Data directory {Path(__file__).parent.joinpath(DATADIR)} found.")
+    LOGGER.info(f"Data directory {Path(__file__).parent.joinpath(DATA_DIR)} found.")
 
-  return DATADIR.exists()
+  return DATA_DIR.exists()
+
+
+def getSchemaPath() -> Path:
+  """
+  Return the proper path for the DDL file used to define the database.
+  """
+
+  ddl_locations = {
+    "source": Path(__file__).parent / 'templates.sql',
+    "frozen": Path(sys.argv[0]).parent / 'templates.sql',
+  }
+
+  if ddl_locations['source'].exists():
+    # DDL is in the package directory and we are running from source.
+    base = ddl_locations['source']
+    LOGGER.info(f"Returning DDL path for source state: {base}")
+
+  elif ddl_locations['frozen'].exists():
+    # DDL exists at the base direcotry in a packaged method.
+    base = ddl_locations['frozen']
+    LOGGER.info(f"Returning DDL path for frozen state: {base}")
+
+  else:
+    # The DDL wasn't in either locaton we expect.
+    LOGGER.error('Could not find DDL file for database schema.')
+    # Dump dictionary with a list comprehension to check the locations.
+    checked = ", ".join(f"{k}: {v}" for k, v in ddl_locations.items())
+    raise DatabaseDDLSourceMissing(checked)
+
+  return base
 
 
 def createDatabase() -> bool:
   """
   Create the database inside the data directory if it does not exist.
   """
-  schemaDDL = Path(__file__).parent.joinpath('templates.sql')
+  #schemaDDL = Path(__file__).parent.joinpath('templates.sql')
+  schemaDDL = getSchemaPath()
+  LOGGER.info(f"Schema DDL loaded from: {schemaDDL}")
 
   if not DATABASE_FILE.exists():
     LOGGER.info(f"Creating database: {Path(__file__).parent.joinpath(DATABASE_FILE)}")

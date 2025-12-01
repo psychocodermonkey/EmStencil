@@ -5,7 +5,7 @@
     Date: 27 Nov 2025
    Notes:
 
-       Copyright (C) 2025  Andrew Dixon
+    Copyright (C) 2023-2025  Andrew Dixon
 
     This program is free software: you can redistribute it and/or modify  it under the terms of the GNU
     General Public License as published by the Free Software Foundation, either version 3 of the License,
@@ -21,17 +21,15 @@
 """
 
 import logging
-from emstencil import DATADIR
+from emstencil import LOG_PATH
 
-
-LOGFILE = f'{DATADIR}/runlog.log'
 
 # Configure logging
 logging.basicConfig(
     level=logging.DEBUG,  # Capture all levels
     format="%(asctime)s - %(levelname)s - %(message)s",
     handlers=[
-        logging.FileHandler(LOGFILE, mode="w"),  # Overwrite each run
+        logging.FileHandler(LOG_PATH, mode="w"),  # Overwrite each run
         logging.StreamHandler()  # Defaults to stderr; we'll filter below
     ]
 )

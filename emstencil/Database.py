@@ -4,7 +4,7 @@
     Date: 23 Nov 2023
    Notes:
 
-    Copyright (C) 2023  Andrew Dixon
+    Copyright (C) 2023-2025  Andrew Dixon
 
     This program is free software: you can redistribute it and/or modify  it under the terms of the GNU
     General Public License as published by the Free Software Foundation, either version 3 of the License,
@@ -23,7 +23,7 @@
 
 import sqlite3
 from emstencil import Dataclasses as emClasses
-from .Ubiquitous import DATABASE_FILE
+from emstencil import DATABASE_FILE
 from .Dataclasses import State
 
 

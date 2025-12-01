@@ -1,7 +1,7 @@
 """
  Program: Setup the SQLite3 Database and convert, if necessary, from an Excel spreadsheet.
     Name: Andrew Dixon            File: ImportTemplates.py
-    Date: 23 Nov 2023
+    Date: 23 Nov 2023-2025
    Notes:
 
     Copyright (C) 2023  Andrew Dixon
@@ -22,9 +22,12 @@
 import sqlite3
 from dataclasses import dataclass, field
 from sxl import Workbook, col2num
+from zipfile import BadZipFile
 from PySide6.QtWidgets import QMessageBox
 from .SelectFile import FileSelectionDialog
 from .Logging import LOGGER
+from .Exceptions import InvalidImportFileType
+from .initialize import getSchemaPath
 
 # TODO: Once TemplateDB object has write/add functionality need to re-write this module.
 
@@ -36,17 +39,19 @@ DATABASE = ''
 def importTemplates(parent) -> bool:
   """importTemplates - Function wrapper to be called from within the application template import."""
   # Be sure to drag in the global data paths.
-  from emstencil import DATADIR, DATABASE_FILE
+  from emstencil import DATA_DIR, DATABASE_FILE
 
   success = False
 
   dialog = FileSelectionDialog(parent)
   if dialog.exec():  # User pressed OK
     file_path = dialog.selected_file
-    success = appConvertSpreadsheet(file_path, DATADIR, DATABASE_FILE)
+    success = appConvertSpreadsheet(file_path, DATA_DIR, DATABASE_FILE)
+    LOGGER.info("Template import completed...")
 
   else:
     QMessageBox.information(parent, 'Canceled', 'No file selected.')
+    LOGGER.info("Template imort cancled...")
 
   return success
 
@@ -61,7 +66,8 @@ def appConvertSpreadsheet(xls_path, datadir, database) -> bool:
   DATABASE = sqlite3.connect(database)
 
   dbCursor = DATABASE.cursor()
-  with open('emstencil/templates.sql') as fp:
+  ddlSchema = getSchemaPath()
+  with open(ddlSchema) as fp:
     dbCursor.executescript(fp.read())
 
   # constants - Define names for thigs we want to make easily modifiable
@@ -71,9 +77,11 @@ def appConvertSpreadsheet(xls_path, datadir, database) -> bool:
     'hasColHdg': True,  # Does the spreadsheet have column headings?
   }
 
-  success = convertSpreadsheet(Spreadsheet)
-  DATABASE.commit()
-  DATABASE.close()
+  # Commit the database changes if conversion was successful, rollback otherwise.
+  if success := convertSpreadsheet(Spreadsheet):
+    DATABASE.commit()
+  else:
+    DATABASE.rollback()
 
   return success
 
@@ -122,13 +130,19 @@ def convertSpreadsheet(Spreadsheet: dict) -> bool:
   # clearTables()
 
   # Sheet can be the sheet name or the sheet # (ex: wb.sheets[1]).
-  ws = Workbook(Spreadsheet['name']).sheets[Spreadsheet['sheet']]
+  try:
+    ws = Workbook(Spreadsheet['name']).sheets[Spreadsheet['sheet']]
+
+  except BadZipFile:
+    LOGGER.error("Corrupted or invalid file selected for import!")
+    raise InvalidImportFileType()
 
   # Iterate through the spreadsheet building the template table and storing other data needed later.
   for rownum, row in enumerate(ws.rows):
 
     # Skip column headings row if we're told about it.
     if Spreadsheet['hasColHdg'] and rownum == 0:
+      LOGGER.info("Skipping column headings from spreadsheet...")
       continue
 
     # Build our object from the spreadsheet.
@@ -143,8 +157,12 @@ def convertSpreadsheet(Spreadsheet: dict) -> bool:
     TemplateRows.append(addTemplateRow(row))
     tagsToCreate = tagsToCreate | set(row.tags)
 
+  # Log how many rows were in the spreadsheet.
+  LOGGER.info(f"{len(TemplateRows)} templates loaded from spreadsheet.")
+
   # Sort tags to be created, also converts set to list object.
   tagsList = sorted(tagsToCreate)
+  LOGGER.info(f"{len(tagsList)} unique metadata tags in spreadsheet.")
 
   # Free memory of tags to create since we won't be using it again. (?? Good practice ??)
   del tagsToCreate
@@ -175,6 +193,7 @@ def clearTables() -> None:
   cursor.execute("delete from templateTags")
   cursor.execute("delete from tags")
   cursor.execute("delete from templates")
+  LOGGER.info("Database tables cleared...")
 
 
 def addTemplateRow(row: XlatedRow) -> XlatedRow | None:

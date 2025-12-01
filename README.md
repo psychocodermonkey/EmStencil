@@ -35,10 +35,10 @@ Clicking Submit on the field entry dialog will return to the main window. The te
 ## Future application updates & bug fixes
 
 - Implement add, update, delete of templates from the application.
-- Fix carry over after clicking the reset button and clicking select again.
+- ~~Fix carry over after clicking the reset button and clicking select again.~~
   - Fields stay populated until a full reload of the tempaltes is caused.
 - Implement File|Open menu for specifying template database location.
-- Implement File|Import to select location to bring in tempaltes from a spreadsheet.
+- ~~Implement File|Import to select location to bring in tempaltes from a spreadsheet.~~
 - Imelement File|Export to export templates from the database to Excel.
 
 ## Development TODO's
@@ -50,23 +50,7 @@ Clicking Submit on the field entry dialog will return to the main window. The te
   - Moving the app to `/Applicatons` the application cannot write within it's app directory.
   - Solution is to leverage `user` storage locations for the DB and logging rather than just using the app directory.
 
-## Building app
-
-### MacOS
-
-To build for macOS using Nuitka the following command places everything in the `build/` directory. This will also create a `.app` file in `build/`.
-
-``` sh
-uv run nuitka \
-  EmStencil.py \
-  --standalone \
-  --enable-plugin=pyside6 \
-  --include-qt-plugins=sensible \
-  --macos-create-app-bundle \
-  --macos-app-icon=assets/EmStencil_Dark.icns \
-  --output-dir=build
-```
-
 ## License
 
 Distrubuted under the GPLv3 see LICENSE for more information.
+Copyright (C) 2023-2025 Andrew Dixon

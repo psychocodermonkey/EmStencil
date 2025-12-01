@@ -5,7 +5,7 @@
     Date: 23 Nov 2023
    Notes:
 
-    Copyright (C) 2023  Andrew Dixon
+    Copyright (C) 2023-2025  Andrew Dixon
 
     This program is free software: you can redistribute it and/or modify  it under the terms of the GNU
     General Public License as published by the Free Software Foundation, either version 3 of the License,
@@ -22,7 +22,6 @@
 
 # TODO: Implement update of templates instead of relying on reconverting from spreadsheet.
 # TODO: Need to handle if/when a meta tag exists in the database list but is not attached to any templates.
-# TODO: Implement argparse to be able to snag commands for (re)init, convert-spreadsheet etc.
 
 import sys
 import atexit
@@ -48,13 +47,16 @@ def main() -> None:
   # Detect platform and set the application icon appropriately.
   if platform.system() == "Darwin":
     icon_path = base_path / 'assets' / 'EmStencil_Dark.icns'
+    LOGGER.info(f"Using macOS icon: {icon_path}")
 
   elif platform.system() == "Windows":
     ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID('EmStencil.App')
     icon_path = base_path / 'assets' / 'EmStencil_Dark.ico'
+    LOGGER.info(f"Using Windows icon: {icon_path}")
 
   else:
     icon_path = base_path / "assets" / "EmStencil_Dark.ico"
+    LOGGER.info(f"Using generic icon: {icon_path}")
 
   # icon_path = Path(__file__).parent / "assets" / "EmStencil_Dark.ico"
 
@@ -62,6 +64,7 @@ def main() -> None:
   app = QApplication(sys.argv)
   app.setWindowIcon(QIcon(str(icon_path)))
   screen = emMain.EmStencil()
+  LOGGER.info("Showing main window...")
   screen.show()
 
   sys.exit(app.exec())
