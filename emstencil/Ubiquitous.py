@@ -19,20 +19,27 @@
 ........1.........2.........3.........4.........5.........6.........7.........8.........9.........0.........1.........2.........3..
 """
 
-from __future__ import annotations
 import os
 import platform
 from pathlib import Path
 
 
 def get_user_data_dir() -> Path:
+  """
+  Set local persistent storage path in "user" application storage.
+  """
+
   system = platform.system()
+
 
   if system == 'Darwin':
     base = Path.home() / 'Library' / 'Application Support' / 'EmStencil'
+
   elif system == 'Windows':
+    # Use APPDATA\Local so data stays on machine not synced with profile.
     local = os.getenv('LOCALAPPDATA') or Path.home() / 'AppData' / 'Local'
     base = Path(local) / 'EmStencil'
+
   else:
     xdg = os.getenv('XDG_DATA_HOME')
     base = Path(xdg) / 'EmStencil' if xdg else Path.home() / '.local' / 'share' / 'EmStencil'
@@ -44,7 +51,3 @@ def get_user_data_dir() -> Path:
 DATA_DIR = get_user_data_dir()                      # Data directory for persistent storage.
 DATABASE_FILE = DATA_DIR / 'templates.db'           # Path for database file.
 LOG_PATH = DATA_DIR / 'runlog.log'                  # Path for runtime log file.
-
-
-#DATADIR = Path('data/')                                     # Data directory for required items.
-#DATABASE_FILE = DATADIR.joinpath("templates.db")             # Template database storage.
