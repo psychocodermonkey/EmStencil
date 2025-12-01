@@ -35,10 +35,10 @@ Clicking Submit on the field entry dialog will return to the main window. The te
 ## Future application updates & bug fixes
 
 - Implement add, update, delete of templates from the application.
-- Fix carry over after clicking the reset button and clicking select again.
+- ~~Fix carry over after clicking the reset button and clicking select again.~~
   - Fields stay populated until a full reload of the tempaltes is caused.
 - Implement File|Open menu for specifying template database location.
-- Implement File|Import to select location to bring in tempaltes from a spreadsheet.
+- ~~Implement File|Import to select location to bring in tempaltes from a spreadsheet.~~
 - Imelement File|Export to export templates from the database to Excel.
 
 ## Development TODO's
@@ -53,3 +53,4 @@ Clicking Submit on the field entry dialog will return to the main window. The te
 ## License
 
 Distrubuted under the GPLv3 see LICENSE for more information.
+Copyright (C) 2023-2025 Andrew Dixon

@@ -2,10 +2,10 @@
  Program: Database singleton class for database management.
 
     Name: Andrew Dixon            File: __init__.py
-    Date: 6 Nov 2025
+    Date: 6 Nov 2023
    Notes:
 
-    Copyright (C) 2023  Andrew Dixon
+    Copyright (C) 2023-2025  Andrew Dixon
 
     This program is free software: you can redistribute it and/or modify  it under the terms of the GNU
     General Public License as published by the Free Software Foundation, either version 3 of the License,

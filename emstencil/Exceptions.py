@@ -1,7 +1,7 @@
 """
  Program: Base custom exception classes.
     Name: Andrew Dixon            File: exceptions.py
-    Date: 14 Sep 2024
+    Date: 14 Sep 2024-2025
    Notes:
 
     Copyright (C) 2024  Andrew Dixon
@@ -60,4 +60,14 @@ class DatabaseDDLSourceMissing(Exception):
   def __init__(self, value: str) -> None:
     self.path = value
     self.message = f'Attempted to load DDL definition file at {self.path}, DDL file not found!'
+    super().__init__(self.message)
+
+
+class InvalidImportFileType(Exception):
+  """
+  ## Exception for when trying to import a file type and file type is incorrect or invalid.
+    - Exception thrown when corrupted or invalid file type is selected for input.
+  """
+  def __init__(self, *args: object) -> None:
+    self.message = 'Corrupted or invalid file selected for import!'
     super().__init__(self.message)
