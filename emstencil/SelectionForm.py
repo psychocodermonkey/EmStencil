@@ -98,6 +98,8 @@ class TemplateSelector(QWidget):
     refreshButton = QPushButton('Reset')
     refreshButton.setMaximumWidth(fontPointSize * 8 + 10)
     refreshButton.clicked.connect(self.resetTemplates)
+    self.refreshShortcut = QShortcut(QKeySequence('Esc'), self)
+    self.refreshShortcut.activated.connect(self.resetTemplates)    
     comboBoxAreaButtons.addWidget(refreshButton)
     self.templateSelectionGroup.addLayout(comboBoxAreaButtons)
 
@@ -150,8 +152,8 @@ class TemplateSelector(QWidget):
     exitButton.setMinimumWidth(minWidth)
     exitButton.setMaximumWidth(minWidth * 2)
     exitButton.clicked.connect(self.exitClicked)
-    self.exitShortcut = QShortcut(QKeySequence('Esc'), self)
-    self.exitShortcut.activated.connect(self.exitClicked)
+    # self.exitShortcut = QShortcut(QKeySequence('Esc'), self)
+    # self.exitShortcut.activated.connect(self.exitClicked)
     buttonLayout.addWidget(exitButton)
 
     return buttonLayout
