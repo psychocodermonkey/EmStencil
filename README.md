@@ -49,6 +49,8 @@ Clicking Submit on the field entry dialog will return to the main window. The te
 
 ## License
 
-Distrubuted under the GPLv3 see LICENSE for more information.
+  Copyright (c) 2023-2026 Andrew Dixon
 
-Copyright (C) 2023-2025 Andrew Dixon
+  This file is part of EmStencil.
+  Licensed under the GNU Lesser General Public License v2.1.
+  See the LICENSE file at the project root for details.
