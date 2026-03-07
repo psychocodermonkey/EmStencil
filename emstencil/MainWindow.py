@@ -21,8 +21,10 @@
 
 from PySide6.QtGui import QAction
 from PySide6.QtWidgets import QMainWindow, QMenu, QMessageBox
+from .Dataclasses import EmailTemplate
 from .ImportTemplates import importTemplates
 from .TemplateLoader import loadTemplateSelector
+from .TemplateEditorDialog import TemplateEditorDialog
 from .Logging import LOGGER
 from .LogViewer import LogViewer
 
@@ -54,6 +56,21 @@ class EmStencil(QMainWindow):
 
     self.menubar.addMenu(menuFile)
 
+    # Define the edit menu actions and add them to the main menubar.
+    menuEdit = QMenu('Edit', self)
+
+    editNewTemplate = QAction('New Template', self)
+    editNewTemplate.setShortcut('Ctrl+N')
+    editNewTemplate.triggered.connect(self.newTemplate)
+    menuEdit.addAction(editNewTemplate)
+
+    editSelectedTemplate = QAction('Edit Selected Template', self)
+    editSelectedTemplate.setShortcut('Ctrl+E')
+    editSelectedTemplate.triggered.connect(self.editSelectedTemplate)
+    menuEdit.addAction(editSelectedTemplate)
+
+    self.menubar.addMenu(menuEdit)
+
     # Define the help menu actions and add it to the menu bar.
     menuHelp = QMenu('Help', self)
 
@@ -74,14 +91,44 @@ class EmStencil(QMainWindow):
 
   def importTemplate(self) -> None:
     if importTemplates(self):
-      # Remove old widget
-      old_widget = self.takeCentralWidget()
-      if old_widget:
-        old_widget.deleteLater()
-        LOGGER.info("Releasing old central widget.")
+      self.reloadTemplateSelector()
 
-      self.setCentralWidget(loadTemplateSelector(self))
-      LOGGER.info("New template selector loaded successfully.")
+  def reloadTemplateSelector(self) -> None:
+    """Reload the central template selector widget."""
+    # Remove old widget
+    old_widget = self.takeCentralWidget()
+    if old_widget:
+      old_widget.deleteLater()
+      LOGGER.info("Releasing old central widget.")
+
+    self.setCentralWidget(loadTemplateSelector(self))
+    LOGGER.info("New template selector loaded successfully.")
+
+  def newTemplate(self) -> None:
+    """Open editor in new-template mode."""
+    editor = TemplateEditorDialog(parent=self)
+    if editor.exec():
+      self.reloadTemplateSelector()
+
+  def editSelectedTemplate(self) -> None:
+    """Open editor in edit mode for the selected template."""
+    currentWidget = self.centralWidget()
+    if not currentWidget or not hasattr(currentWidget, 'getSelectedTemplate'):
+      QMessageBox.information(self, "Information", "No template selected to edit.")
+      return
+
+    selectedTemplate = currentWidget.getSelectedTemplate()
+    if (
+      not isinstance(selectedTemplate, EmailTemplate)
+      or selectedTemplate.rowID is None
+      or selectedTemplate.rowID <= 0
+    ):
+      QMessageBox.information(self, "Information", "No template selected to edit.")
+      return
+
+    editor = TemplateEditorDialog(template=selectedTemplate, parent=self)
+    if editor.exec():
+      self.reloadTemplateSelector()
 
   def showRunlog(self) -> None:
     """

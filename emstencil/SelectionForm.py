@@ -236,6 +236,10 @@ class TemplateSelector(QWidget):
       LOGGER.info('All values must be entered for template to be copied to clipboard...')
       self.sendUserInfoMessage("You must enter values for all fields in the template.")
 
+  def getSelectedTemplate(self) -> EmailTemplate | None:
+    """Return selected template object from the combo box."""
+    return self.templateComboBox.currentData()
+
   def exitClicked(self) -> None:
     """Close the form/application by triggering close from the parent."""
     LOGGER.info('Application close...')
