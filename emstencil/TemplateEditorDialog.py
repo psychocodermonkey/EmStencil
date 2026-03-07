@@ -13,7 +13,7 @@
 """
 
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QCloseEvent
+from PySide6.QtGui import QCloseEvent, QKeySequence, QShortcut
 from PySide6.QtWidgets import QDialog, QLabel, QLineEdit, QTextEdit, QPushButton
 from PySide6.QtWidgets import QHBoxLayout, QVBoxLayout, QMessageBox
 from .Database import TemplateDB
@@ -82,6 +82,8 @@ class TemplateEditorDialog(QDialog):
     self.saveButton.clicked.connect(self.SaveClicked)
     self.cancelButton.clicked.connect(self.CancelClicked)
     self.deleteButton.clicked.connect(self.DeleteClicked)
+    self.saveShortcut = QShortcut(QKeySequence("Ctrl+S"), self)
+    self.saveShortcut.activated.connect(self.SaveClicked)
 
   def LoadValues(self) -> None:
     """Load values into controls based on new/edit mode."""

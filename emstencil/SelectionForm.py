@@ -167,6 +167,7 @@ class TemplateSelector(QWidget):
     # Otherwise filter based on the selected tag as long as it si not all
     elif selectedMetadataTag != MetadataTag('all'):
       self.templateList = self.db.FetchTemplatesForTag(str(selectedMetadataTag))
+      self.templateList = list(map(self.db.FetchMetadataForTemplate, self.templateList))
 
     else: # ALL is the only one in the list, means the DB or that table is empty, redraw and exit.
       self.repaint()
