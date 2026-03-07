@@ -12,21 +12,15 @@
 ........1.........2.........3.........4.........5.........6.........7.........8.........9.........0.........1.........2.........3..
 """
 
-import sqlite3
 from dataclasses import dataclass, field
 from sxl import Workbook, col2num
 from zipfile import BadZipFile
 from PySide6.QtWidgets import QMessageBox
+from .Database import TemplateDB
+from .Dataclasses import EmailTemplate, MetadataTag
 from .SelectFile import FileSelectionDialog
 from .Logging import LOGGER
 from .Exceptions import InvalidImportFileType
-from .initialize import getSchemaPath
-
-# TODO: Once TemplateDB object has write/add functionality need to re-write this module.
-
-
-# Global
-DATABASE = ''
 
 
 def importTemplates(parent) -> bool:
@@ -51,32 +45,19 @@ def importTemplates(parent) -> bool:
 
 def appConvertSpreadsheet(xls_path, datadir, database) -> bool:
   """appConvertSpreadsheet - Convert xlsx spreadsheet from within application."""
-  global DATABASE
-
   LOGGER.info(f'Selected file: {xls_path}')
   LOGGER.info(f'Global data dir is: {datadir}')
   LOGGER.info(f'Global database path is: {database}')
-  DATABASE = sqlite3.connect(database)
-
-  dbCursor = DATABASE.cursor()
-  ddlSchema = getSchemaPath()
-  with open(ddlSchema) as fp:
-    dbCursor.executescript(fp.read())
+  db = TemplateDB()
 
   # constants - Define names for thigs we want to make easily modifiable
-  Spreadsheet = {
+  spreadsheet = {
     'name': xls_path,  # Can also be workbook path if it needs to be
     'sheet': 'Sheet1',  # Can be sheet name or number (non-zero based)
     'hasColHdg': True,  # Does the spreadsheet have column headings?
   }
 
-  # Commit the database changes if conversion was successful, rollback otherwise.
-  if success := convertSpreadsheet(Spreadsheet):
-    DATABASE.commit()
-  else:
-    DATABASE.rollback()
-
-  return success
+  return convertSpreadsheet(spreadsheet, db)
 
 # Define a class on the fly to assign the data to to make accessing it easier.
 @dataclass
@@ -106,12 +87,15 @@ class XlatedRow:
     return f'{self.title}'
 
 
-def convertSpreadsheet(Spreadsheet: dict) -> bool:
+def convertSpreadsheet(spreadsheet: dict, db: TemplateDB | None = None) -> bool:
   """Code for converting spreadsheet into SQLite3 Database."""
+  if db is None:
+    db = TemplateDB()
+
   # -- Local variables (work and otherwise)
-  TemplateRows: list = []
-  tagsToCreate: set = set()
-  TagIDs: dict = {}
+  templateRows: list[XlatedRow] = []
+  seenTitles: set[str] = set()
+  duplicateTitles: set[str] = set()
 
   # Functions to convert column letters to numbers and vice-versa. Using lambda because I like this as an example.
   #  Converted the functions from sxl to lambda just as an example. moving over to using sxl built ins.
@@ -119,12 +103,9 @@ def convertSpreadsheet(Spreadsheet: dict) -> bool:
   # colNum = lambda a: 0 if a == '' else 1 + ord(a[-1]) - ord('A') + 26 * colNum(a[:-1])  # noqa: E731
   # colName = lambda n: '' if n <= 0 else colName((n - 1) // 26) + chr((n - 1) % 26 + ord('A'))  # noqa: E731
 
-  # Delete all values from all tables.
-  # clearTables()
-
   # Sheet can be the sheet name or the sheet # (ex: wb.sheets[1]).
   try:
-    ws = Workbook(Spreadsheet['name']).sheets[Spreadsheet['sheet']]
+    ws = Workbook(spreadsheet['name']).sheets[spreadsheet['sheet']]
 
   except BadZipFile:
     LOGGER.error("Corrupted or invalid file selected for import!")
@@ -134,7 +115,7 @@ def convertSpreadsheet(Spreadsheet: dict) -> bool:
   for rownum, row in enumerate(ws.rows):
 
     # Skip column headings row if we're told about it.
-    if Spreadsheet['hasColHdg'] and rownum == 0:
+    if spreadsheet['hasColHdg'] and rownum == 0:
       LOGGER.info("Skipping column headings from spreadsheet...")
       continue
 
@@ -146,90 +127,27 @@ def convertSpreadsheet(Spreadsheet: dict) -> bool:
       tags=row[col2num('C') - 1].split(',')
     )
 
-    # Add the templates to the database, store their RowID. Add its tags to the set.
-    TemplateRows.append(addTemplateRow(row))
-    tagsToCreate = tagsToCreate | set(row.tags)
+    if row.title in seenTitles:
+      duplicateTitles.add(row.title)
+
+    else:
+      seenTitles.add(row.title)
+    templateRows.append(row)
 
   # Log how many rows were in the spreadsheet.
-  LOGGER.info(f"{len(TemplateRows)} templates loaded from spreadsheet.")
+  LOGGER.info(f"{len(templateRows)} templates loaded from spreadsheet.")
 
-  # Sort tags to be created, also converts set to list object.
-  tagsList = sorted(tagsToCreate)
-  LOGGER.info(f"{len(tagsList)} unique metadata tags in spreadsheet.")
+  if duplicateTitles:
+    duplicateList = ', '.join(sorted(duplicateTitles))
+    errorMsg = f'Duplicate template titles found in import file: {duplicateList}'
+    LOGGER.error(errorMsg)
+    raise ValueError(errorMsg)
 
-  # Free memory of tags to create since we won't be using it again. (?? Good practice ??)
-  del tagsToCreate
+  for importedRow in templateRows:
+    template = EmailTemplate(importedRow.title, importedRow.content)
+    template.metadata: list[MetadataTag] = [MetadataTag(tag) for tag in importedRow.tags if tag]
+    db.UpsertTemplateByTitle(template)
 
-  # Build the tags table, saving the RowIDs used for each tag for use later.
-  for tag in tagsList:
-    # Use dictionary comprehension to replace the dictionary.
-    TagIDs = {**TagIDs, tag: addTagRow(tag)}
+  LOGGER.info(f'Number of templates added: {len(templateRows)}')
 
-  # Link everything together to build the templateTags table.
-  for tmplt in TemplateRows:
-    for tag in tmplt.tags:
-      addTemplateTagsRow(tmplt.rowID, TagIDs[tag] )
-
-  LOGGER.info(f'Number of templates added: {len(TemplateRows)}')
-  LOGGER.info(f'Number of tags added: {len(TagIDs)}')
-
-  return len(TemplateRows) > 0
-
-
-def clearTables() -> None:
-  """Delete all values from all tables before reconverting.
-     Helpful for re-converting the data when the spreadsheet is updated.
-     Currently this is un-used since this rebuilds the DB from ddl every time"""
-  global DATABASE
-
-  cursor = DATABASE.cursor()
-  cursor.execute("delete from templateTags")
-  cursor.execute("delete from tags")
-  cursor.execute("delete from templates")
-  LOGGER.info("Database tables cleared...")
-
-
-def addTemplateRow(row: XlatedRow) -> XlatedRow | None:
-  """Add Template content rows to the templates table in the database.
-     Returns the row it just added updated with it's current rowID in the database."""
-  global DATABASE
-
-  cursor = DATABASE.cursor()
-  cursor.execute(
-    """
-      insert into templates (title, content) values (?, ?)
-    """,
-    [row.title, row.content]
-  )
-  row.rowID = cursor.lastrowid
-
-  return row
-
-
-def addTagRow(tag: str) -> int | None:
-  """Add Tag content rows to the tags table in the database.
-     Returns the rowID for what it just added."""
-  global DATABASE
-
-  cursor = DATABASE.cursor()
-  cursor.execute(
-    """
-      insert into tags (tag) values (?)
-    """,
-    [tag]
-  )
-
-  return cursor.lastrowid
-
-
-def addTemplateTagsRow(tmpltRowID: int, tagRowID: int) -> None:
-  """Add records for tags associated with template items."""
-  global DATABASE
-
-  cursor = DATABASE.cursor()
-  cursor.execute(
-    """
-      insert into templateTags (tmplt_uid, tag_uid) values (?, ?)
-    """,
-    [tmpltRowID, tagRowID]
-  )
+  return len(templateRows) > 0
