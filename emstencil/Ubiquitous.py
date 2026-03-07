@@ -26,16 +26,20 @@ def get_user_data_dir() -> Path:
 
 
   if system == 'Darwin':
-    base = Path.home() / 'Library' / 'Application Support' / 'EmStencil'
+    base = Path.home() / 'Library' / 'Application Support' / 'dev.psychocodermonkey' / 'EmStencil'
 
   elif system == 'Windows':
     # Use APPDATA\Local so data stays on machine not synced with profile.
     local = os.getenv('LOCALAPPDATA') or Path.home() / 'AppData' / 'Local'
-    base = Path(local) / 'EmStencil'
+    base = Path(local) / 'dev.psychocodermonkey' / 'EmStencil'
 
   else:
     xdg = os.getenv('XDG_DATA_HOME')
-    base = Path(xdg) / 'EmStencil' if xdg else Path.home() / '.local' / 'share' / 'EmStencil'
+    base = (
+      Path(xdg) / 'dev.psychocodermonkey' / 'EmStencil'
+      if xdg
+      else Path.home() / '.local' / 'share' / 'dev.psychocodermonkey' / 'EmStencil'
+    )
 
   base.mkdir(parents=True, exist_ok=True)
   return base
