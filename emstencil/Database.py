@@ -12,12 +12,11 @@
 ........1.........2.........3.........4.........5.........6.........7.........8.........9.........0.........1.........2.........3..
 """
 
-# TODO: Implement update, insert methods for the database.
-
 import sqlite3
 from emstencil import Dataclasses as emClasses
 from emstencil import DATABASE_FILE
 from .Dataclasses import State
+from .Exceptions import AccessNullRowID
 
 
 class TemplateDB:
@@ -69,7 +68,7 @@ class TemplateDB:
     """Get all metadata tags associated with template."""
     # Template passed must have a rowID in order to know get tags from the DB.
     if tmplt.rowID is None:
-      raise emClasses.AccessNullRowID()
+      raise AccessNullRowID()
 
     # Run query to get tags associated with the given template.
     cursor = self.DB.cursor()
@@ -137,54 +136,84 @@ class TemplateDB:
 
   def AddTemplate(self, template: emClasses.EmailTemplate) -> None:
     """Add template to the database from the template object."""
-    # TODO: Implement AddTemplate
-    pass
+    with self.DB:
+      cursor = self.DB.cursor()
+      cursor.execute(
+        """
+          insert into templates (title, content)
+          values (?, ?);
+        """,
+        [template.title, template.content]
+      )
+
+      template.rowID = cursor.lastrowid
+      self._SyncTemplateTagsForRowID(template.rowID, template.metadata, cursor)
+      template.state = State.EXISTING
 
   def DeleteTemplate(self, template: emClasses.EmailTemplate) -> None:
     """Look for and delete the specified template from the database."""
-    # TODO: Implement Delete Template
-    cursor = self.DB.cursor()
+    templateRowID = self._ResolveTemplateRowID(template)
 
-    # Remove all of the tags associated to this specific template.
-    cursor.execute(
-      """
-        delete from templateTags
-        where tmplt_uid = ?;
-      """,
-      [template.rowID]
-    )
+    with self.DB:
+      cursor = self.DB.cursor()
+      # Remove all of the tags associated to this specific template.
+      cursor.execute(
+        """
+          delete from templateTags
+          where tmplt_uid = ?;
+        """,
+        [templateRowID]
+      )
 
-    # Remove the specific template from the database.
-    cursor.execute(
-      """
-        delete from templates
-        where uid = ?;
-      """,
-      [template.rowID]
-    )
+      # Remove the specific template from the database.
+      cursor.execute(
+        """
+          delete from templates
+          where uid = ?;
+        """,
+        [templateRowID]
+      )
 
-    # Clean up the tags table in case this was the only template utilizing the given tag.
-    self.RemoveEmptyTags()
+      # Clean up the tags table in case this was the only template utilizing the given tag.
+      self.RemoveEmptyTags(cursor)
 
     return
 
   def UpdateTemplate(self, template: emClasses.EmailTemplate) -> None:
     """Update the template passed in the database. This will update all fields."""
-    cursor = self.DB.cursor()
-    cursor.execute(
-      """
-        update templates
-        set title = ?, content = ?
-        where uid = ?
-      """,
-      [template.title, template.content, template.rowID]
-    )
+    templateRowID = self._ResolveTemplateRowID(template)
 
-    # TODO: Need to implement handing ADD / DELETE associated tags.
+    with self.DB:
+      cursor = self.DB.cursor()
+      cursor.execute(
+        """
+          update templates
+          set title = ?, content = ?
+          where uid = ?;
+        """,
+        [template.title, template.content, templateRowID]
+      )
 
-  def RemoveEmptyTags(self) -> None:
+      self._SyncTemplateTagsForRowID(templateRowID, template.metadata, cursor)
+      template.rowID = templateRowID
+      template.state = State.EXISTING
+
+  def UpsertTemplateByTitle(self, template: emClasses.EmailTemplate) -> None:
+    """Add or update template and metadata by title."""
+    row = self._FetchTemplateRowByTitle(template.title)
+
+    if row is None:
+      self.AddTemplate(template)
+      return
+
+    template.rowID = row[0]
+    self.UpdateTemplate(template)
+
+  def RemoveEmptyTags(self, cursor: sqlite3.Cursor | None = None) -> None:
     """Remove any tags that have no associated templates with them."""
-    cursor = self.DB.cursor()
+    if cursor is None:
+      cursor = self.DB.cursor()
+
     cursor.execute(
       """
         delete from tags
@@ -193,4 +222,126 @@ class TemplateDB:
       """
     )
 
+    if self.DB.in_transaction:
+      return
+    self.DB.commit()
+
     return
+
+  def _ResolveTemplateRowID(self, template: emClasses.EmailTemplate) -> int:
+    """Return row ID from template object or by title."""
+    if template.rowID:
+      return template.rowID
+
+    row = self._FetchTemplateRowByTitle(template.title)
+    if row is None:
+      raise AccessNullRowID()
+
+    template.rowID = row[0]
+
+    return template.rowID
+
+  def _NormalizeTagList(self, tags: list[emClasses.MetadataTag | str] | None) -> list[str]:
+    """Normalize tags to trimmed lower-case unique list preserving order."""
+    if tags is None:
+      return []
+
+    normalized: list[str] = []
+    for tag in tags:
+      tagValue = tag.tag if isinstance(tag, emClasses.MetadataTag) else str(tag)
+      cleanedTag = tagValue.strip().lower()
+
+      if not cleanedTag:
+        continue
+
+      if cleanedTag not in normalized:
+        normalized.append(cleanedTag)
+
+    return normalized
+
+  def _FetchTemplateRowByTitle(self, title: str) -> tuple[int, str, str] | None:
+    """Fetch template row by title."""
+    cursor = self.DB.cursor()
+    cursor.execute(
+      """
+        select uid, title, content
+        from templates
+        where title = ?;
+      """,
+      [title]
+    )
+
+    row = cursor.fetchone()
+
+    return row
+
+  def _GetOrCreateTagRowID(self, tag: str, cursor: sqlite3.Cursor) -> int:
+    """Fetch existing tag row ID or create a new row."""
+    cursor.execute(
+      """
+        select uid
+        from tags
+        where tag = ?;
+      """,
+      [tag]
+    )
+    row = cursor.fetchone()
+
+    if row:
+      return row[0]
+
+    cursor.execute(
+      """
+        insert into tags (tag)
+        values (?);
+      """,
+      [tag]
+    )
+
+    return cursor.lastrowid
+
+  def _SyncTemplateTagsForRowID(
+    self,
+    templateRowID: int,
+    templateTags: list[emClasses.MetadataTag | str] | None,
+    cursor: sqlite3.Cursor
+  ) -> None:
+    """Sync template tag links to exactly match the provided tag list."""
+    desiredTags = self._NormalizeTagList(templateTags)
+
+    cursor.execute(
+      """
+        select tg.uid, tg.tag
+        from tags tg
+        inner join templateTags tmtg on tmtg.tag_uid = tg.uid
+        where tmtg.tmplt_uid = ?;
+      """,
+      [templateRowID]
+    )
+
+    existing = cursor.fetchall()
+    existingTags = {row[1]: row[0] for row in existing}
+
+    desiredTagSet = set(desiredTags)
+    existingTagSet = set(existingTags.keys())
+
+    for tag in desiredTagSet - existingTagSet:
+      tagRowID = self._GetOrCreateTagRowID(tag, cursor)
+      cursor.execute(
+        """
+          insert into templateTags (tmplt_uid, tag_uid)
+          values (?, ?);
+        """,
+        [templateRowID, tagRowID]
+      )
+
+    for tag in existingTagSet - desiredTagSet:
+      cursor.execute(
+        """
+          delete from templateTags
+          where tmplt_uid = ? and tag_uid = ?;
+        """,
+        [templateRowID, existingTags[tag]]
+      )
+
+    self.RemoveEmptyTags(cursor)
