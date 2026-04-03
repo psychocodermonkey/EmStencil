@@ -15,7 +15,8 @@
 import argparse
 import sqlite3
 from dataclasses import dataclass, field
-from sxl import Workbook, col2num
+
+from .spreadsheet import read_template_rows
 
 
 # Global
@@ -49,13 +50,6 @@ args = parser.parse_args()
 # TODO: Once TemplateDB object has write/add functionality need to re-write this module.
 database =  sqlite3.connect(args.database)
 
-# constants - Define names for thigs we want to make easily modifiable
-Spreadsheet = {
-  'name' : args.xls,                            # Can also be workbook path if it needs to be
-  'sheet' : 'Sheet1',                           # Can be sheet name or number (non-zero based)
-  'hasColHdg' : True,                           # Does the spreadsheet have column headings?
-}
-
 def main():
   """Main - Xlate the spreadsheet into an object to be able to manipulate"""
   # Create the SQLite3 database from the DDL definition.
@@ -64,7 +58,7 @@ def main():
     dbCursor.executescript(fp.read())
 
   # Convert the spreadsheet into the SQLite3 database.
-  convertSpreadsheet(Spreadsheet)
+  convertSpreadsheet(args.xls)
 
 
 # Define a class on the fly to assign the data to to make accessing it easier.
@@ -95,39 +89,14 @@ class XlatedRow:
     return f'{self.title}'
 
 
-def convertSpreadsheet(Spreadsheet: dict) -> None:
+def convertSpreadsheet(xls_path: str) -> None:
   """Code for converting spreadsheet into SQLite3 Database."""
-  # -- Local variables (work and otherwise)
   TemplateRows: list = []
   tagsToCreate: set = set()
   TagIDs: dict = {}
 
-  # Functions to convert column letters to numbers and vice-versa. Using lambda because I like this as an example.
-  #  Converted the functions from sxl to lambda just as an example. moving over to using sxl built ins.
-  #  Leaving this "comment" here to have them documented becasue they're still pretty neat lambda's.
-  # colNum = lambda a: 0 if a == '' else 1 + ord(a[-1]) - ord('A') + 26 * colNum(a[:-1])  # noqa: E731
-  # colName = lambda n: '' if n <= 0 else colName((n - 1) // 26) + chr((n - 1) % 26 + ord('A'))  # noqa: E731
-
-  # Delete all values from all tables.
-  # clearTables()
-
-  # Sheet can be the sheet name or the sheet # (ex: wb.sheets[1]).
-  ws = Workbook(Spreadsheet['name']).sheets[Spreadsheet['sheet']]
-
-  # Iterate through the spreadsheet building the template table and storing other data needed later.
-  for rownum, row in enumerate(ws.rows):
-
-    # Skip column headings row if we're told about it.
-    if Spreadsheet['hasColHdg'] and rownum == 0:
-      continue
-
-    # Build our object from the spreadsheet.
-    # Be sure to subtract one since the column conversion is not zero based.
-    row = XlatedRow(
-      title=row[col2num('A') - 1].strip(),
-      content=row[col2num('B') - 1].strip(),
-      tags=row[col2num('C') - 1].split(',')
-    )
+  for title, content, tag_parts in read_template_rows(xls_path):
+    row = XlatedRow(title=title, content=content, tags=tag_parts)
 
     # Add the templates to the database, store their RowID. Add its tags to the set.
     TemplateRows.append(addTemplateRow(row))
