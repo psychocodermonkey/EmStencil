@@ -13,8 +13,8 @@
 """
 
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QFontMetrics, QKeySequence, QShortcut
-from PySide6.QtWidgets import QApplication, QMessageBox, QWidget, QHBoxLayout, QVBoxLayout
+from PySide6.QtGui import QFontMetrics, QKeySequence, QShortcut, QClipboard
+from PySide6.QtWidgets import QApplication, QMessageBox, QWidget, QHBoxLayout, QVBoxLayout, QMainWindow
 from PySide6.QtWidgets import QLabel, QPushButton, QTextEdit, QComboBox
 from .Database import TemplateDB
 from .FieldEntryDialog import FieldEntryDialog
@@ -27,16 +27,16 @@ class TemplateSelector(QWidget):
   def __init__(self, templateList: list, metaTags: list, parent=None) -> None:
     super(TemplateSelector, self).__init__()
     # Work fields and local variables for the main application.
-    fontPointSize = QLabel().font().pointSize()
-    self.templateList = templateList
-    self.metaTags = metaTags
-    self.clipboard = QApplication.clipboard()
+    fontPointSize: int = QLabel().font().pointSize()
+    self.templateList: list[EmailTemplate] = templateList
+    self.metaTags: list[MetadataTag] = metaTags
+    self.clipboard: QClipboard = QApplication.clipboard()
     self.db = TemplateDB()
-    self.parent = parent
+    self.parent: QMainWindow | None = parent
 
     # Set basics for main application window.
     self.setWindowTitle('EmStencil - Templated email builder')
-    self.layout = QVBoxLayout()
+    self.layout: QVBoxLayout = QVBoxLayout()
     self.setLayout(self.layout)
 
     # Set up functionality for keyboard interaction.
@@ -64,7 +64,7 @@ class TemplateSelector(QWidget):
 
   def buildTemplateSelectGroup(self) -> None:
     """Build the boxes to filter out and select what template to work with."""
-    fontPointSize = QLabel().font().pointSize()
+    fontPointSize: int = QLabel().font().pointSize()
     self.templateSelectionGroup = QHBoxLayout()
 
     # Build layouts to be nexted in this group to allow differing alignment.
@@ -74,12 +74,12 @@ class TemplateSelector(QWidget):
     comboBoxAreaButtons.setAlignment(Qt.AlignmentFlag.AlignRight)
 
     # Build the template list combo box and add it to the combo box group.
-    self.templateComboBox = self.buildComboBoxData(self.templateList)
+    self.templateComboBox: QComboBox = self.buildComboBoxData(self.templateList)
     self.templateComboBox.activated.connect(self.templateComboBoxSelected)
     comboBoxGroup.addWidget(self.templateComboBox)
 
     # Build the meta tag list combo box and add it to the combo box group.
-    self.metaTagComboBox = self.buildComboBoxData(self.metaTags)
+    self.metaTagComboBox: QComboBox = self.buildComboBoxData(self.metaTags)
     self.metaTagComboBox.activated.connect(self.metaTagComboBoxSelected)
     comboBoxGroup.addWidget(self.metaTagComboBox)
 
@@ -109,9 +109,9 @@ class TemplateSelector(QWidget):
     minWidth: int = 60
 
     for item in items:
-      stringWidth = fontMetrics.horizontalAdvance(str(item) + ' ' * 3)
+      stringWidth: int = fontMetrics.horizontalAdvance(str(item) + ' ' * 3)
       if stringWidth > minWidth:
-        minWidth = stringWidth
+        minWidth: int = stringWidth
       comboBox.addItem(str(item), item)
     comboBox.setFixedWidth(int(minWidth * 1.5))
 
