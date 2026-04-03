@@ -12,7 +12,8 @@
 ........1.........2.........3.........4.........5.........6.........7.........8.........9.........0.........1.........2.........3..
 """
 
-from PySide6.QtWidgets import QDialog, QHBoxLayout, QLabel, QLineEdit, QPushButton, QVBoxLayout
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QDialog, QHBoxLayout, QLabel, QLineEdit, QPushButton, QVBoxLayout, QMainWindow
 from .Dataclasses import EmailTemplate
 from .Exceptions import TemplateKeyValueNull
 
@@ -22,10 +23,10 @@ class FieldEntryDialog(QDialog):
   def __init__(self, template: EmailTemplate, parent=None):
     super().__init__()
     self.setWindowTitle('Fields available for template')
-    self.parent = parent
-    self.template = template
-    self.dictionary = self.template.fields
-    self.layout = QVBoxLayout()
+    self.parent: QMainWindow | None = parent
+    self.template: EmailTemplate = template
+    self.dictionary: dict[str, str | int | None] = self.template.fields
+    self.layout: QVBoxLayout = QVBoxLayout()
     self.setLayout(self.layout)
 
     # Calculate what the largest label we need to scale everything accordingly.
@@ -33,9 +34,9 @@ class FieldEntryDialog(QDialog):
     def clamp(n, minn, maxn):
       return max(min(maxn, n), minn)
 
-    fontPointSize = QLabel().font().pointSize()
-    minLengthForKeys = (clamp(len(max(self.dictionary)), 5, 50) * fontPointSize) + 20
-    minLengthForData = (clamp(len(max(self.dictionary)), 15, 120) * fontPointSize) + 20
+    fontPointSize: int = QLabel().font().pointSize()
+    minLengthForKeys: int   = (clamp(max(len(k) for k in self.dictionary), 5, 50) * fontPointSize)
+    minLengthForData: int = (clamp(max(len(k) for k in self.dictionary), 15, 120) * fontPointSize) + 10
 
     # Build the dialog on the fly for the keys in the database.
     for key, value in self.dictionary.items():
@@ -43,6 +44,7 @@ class FieldEntryDialog(QDialog):
       fieldGroup = QHBoxLayout()
       # Put field text in a label for prompting the user and set it's size.
       label = QLabel(key)
+      label.setAlignment(Qt.AlignmentFlag.AlignRight)
       label.setFixedWidth(minLengthForKeys)
 
       # Build line edit, set it's size to our scale, bring in text if it is present.
@@ -50,6 +52,7 @@ class FieldEntryDialog(QDialog):
       txtInputFld.setFixedWidth(minLengthForData)
       if value:
         txtInputFld.setText(value)
+
       else:
         txtInputFld.setText('')
 
@@ -70,7 +73,7 @@ class FieldEntryDialog(QDialog):
   def submit(self) -> None:
     """Submit button for form, gather information and pass it back to the main form."""
     # Get the data from the text boxes on the form.
-    inputFields = self.findChildren(QLineEdit)
+    inputFields: list[QLineEdit] = self.findChildren(QLineEdit)
 
     # Plug the data back into to the dictionary on the form to be passed back.
     for i, value in enumerate(inputFields):
@@ -79,6 +82,7 @@ class FieldEntryDialog(QDialog):
     try:
       self.template.setFields(self.dictionary)
       self.parent.updateTextArea(self.template)
+
     except TemplateKeyValueNull:
       self.parent.updateTextArea(self.template)
 
