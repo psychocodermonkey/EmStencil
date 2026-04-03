@@ -64,6 +64,36 @@ class TemplateDB:
 
     return tmplts
 
+  def FetchAllTemplatesForExport(self) -> list[tuple[str, str, str]]:
+    """Return (title, content, tags_csv) for every template, sorted by title (case-insensitive)."""
+    cursor = self.DB.cursor()
+    cursor.execute(
+      """
+        select uid, title, content
+        from templates
+        order by title collate nocase;
+      """
+    )
+    templates = cursor.fetchall()
+
+    cursor.execute(
+      """
+        select tt.tmplt_uid, ta.tag
+        from templateTags tt
+        inner join tags ta on ta.uid = tt.tag_uid;
+      """
+    )
+    tags_by_template: dict[int, list[str]] = {}
+    for tmplt_uid, tag in cursor:
+      tags_by_template.setdefault(tmplt_uid, []).append(tag)
+
+    result: list[tuple[str, str, str]] = []
+    for uid, title, content in templates:
+      tags = sorted(tags_by_template.get(uid, []))
+      result.append((title, content, ",".join(tags)))
+
+    return result
+
   def FetchMetadataForTemplate(self, tmplt: emClasses.EmailTemplate) -> emClasses.EmailTemplate:
     """Get all metadata tags associated with template."""
     # Template passed must have a rowID in order to know get tags from the DB.

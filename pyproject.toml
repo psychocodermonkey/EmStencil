@@ -5,9 +5,9 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "openpyxl>=3.1.5",
     "pyodbc>=5.3.0",
     "pyside6>=6.10.1",
-    "sxl>=0.0.1a10",
 ]
 
 [dependency-groups]

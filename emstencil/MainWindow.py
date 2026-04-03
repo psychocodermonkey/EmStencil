@@ -22,6 +22,7 @@
 from PySide6.QtGui import QAction
 from PySide6.QtWidgets import QMainWindow, QMenu, QMessageBox
 from .Dataclasses import EmailTemplate
+from .ExportTemplates import exportTemplates
 from .ImportTemplates import importTemplates
 from .TemplateLoader import loadTemplateSelector
 from .TemplateEditorDialog import TemplateEditorDialog
@@ -48,6 +49,10 @@ class EmStencil(QMainWindow):
     fileImport = QAction('Import Template...', self)
     fileImport.triggered.connect(self.importTemplate)
     menuFile.addAction(fileImport)
+
+    fileExport = QAction('Export Templates...', self)
+    fileExport.triggered.connect(self.exportTemplateSpreadsheet)
+    menuFile.addAction(fileExport)
 
     # Exit application menu item.
     fileExit = QAction('Exit', self)
@@ -92,6 +97,9 @@ class EmStencil(QMainWindow):
   def importTemplate(self) -> None:
     if importTemplates(self):
       self.reloadTemplateSelector()
+
+  def exportTemplateSpreadsheet(self) -> None:
+    exportTemplates(self)
 
   def reloadTemplateSelector(self) -> None:
     """Reload the central template selector widget."""
