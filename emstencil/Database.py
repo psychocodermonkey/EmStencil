@@ -15,16 +15,17 @@
 import sqlite3
 from emstencil import Dataclasses as emClasses
 from emstencil import DATABASE_FILE
-from .Dataclasses import State
+from .Dataclasses import State, EmailTemplate
 from .Exceptions import AccessNullRowID
+from typing import Self, Sequence
 
 
 class TemplateDB:
   """Data layer class for handling translation of data to and from the database."""
 
-  _instance = None
+  _instance: Self | None = None
 
-  def __new__(db, *args, **kwargs):
+  def __new__(db, *args, **kwargs) -> Self:
     """Generate new instance if one doesn't exist, return the existing one if it does."""
     if not db._instance:
       db._instance = super().__new__(db, *args, **kwargs)
@@ -32,7 +33,7 @@ class TemplateDB:
 
   def __init__(self):
     """New instance of database connection."""
-    self.DB = sqlite3.connect(DATABASE_FILE)
+    self.DB: sqlite3.Connection = sqlite3.connect(DATABASE_FILE)
 
     # Be sure to enable foreign keys on database
     self.DB.execute('pragma foreign_keys = ON')
@@ -47,7 +48,7 @@ class TemplateDB:
 
   def FetchAllTemplates(self) -> list[emClasses.EmailTemplate]:
     """Return all templates from the DB."""
-    cursor = self.DB.cursor()
+    cursor: sqlite3.Cursor = self.DB.cursor()
     cursor.execute(
       """
         Select title, content, uid
@@ -56,10 +57,10 @@ class TemplateDB:
     )
 
     # Build template objects for query results.
-    tmplts = []
+    tmplts: list[EmailTemplate] = []
     for row in cursor:
       tmplt = emClasses.EmailTemplate(row[0], row[1])
-      tmplt.rowID = row[2]
+      tmplt.rowID= row[2]
       tmplt.state = State.EXISTING
       tmplts.append(tmplt)
 
@@ -67,7 +68,7 @@ class TemplateDB:
 
   def FetchAllTemplatesForExport(self) -> list[tuple[str, str, str]]:
     """Return (title, content, tags_csv) for every template, sorted by title (case-insensitive)."""
-    cursor = self.DB.cursor()
+    cursor: sqlite3.Cursor = self.DB.cursor()
     cursor.execute(
       """
         select uid, title, content
@@ -102,7 +103,7 @@ class TemplateDB:
       raise AccessNullRowID()
 
     # Run query to get tags associated with the given template.
-    cursor = self.DB.cursor()
+    cursor: sqlite3.Cursor = self.DB.cursor()
     cursor.execute(
       """
         select tgRowID, tag
@@ -116,7 +117,7 @@ class TemplateDB:
     tmplt.metadata = []
     for row in cursor:
       wkTag = emClasses.MetadataTag(row[1])
-      wkTag.rowID = row[0]
+      wkTag.rowID= row[0]
       wkTag.assocRowID = tmplt.rowID
       wkTag.state = State.EXISTING
       tmplt.metadata.append(wkTag)
@@ -125,7 +126,7 @@ class TemplateDB:
 
   def FetchTemplatesForTag(self, srchTag: str) -> list[emClasses.EmailTemplate]:
     """Return all templates from the DB for a given meta tag."""
-    cursor = self.DB.cursor()
+    cursor: sqlite3.Cursor = self.DB.cursor()
     cursor.execute(
       """
         Select title, content, tmpRowID
@@ -177,7 +178,11 @@ class TemplateDB:
         [template.title, template.content],
       )
 
-      template.rowID = cursor.lastrowid
+      newRowID = cursor.lastrowid
+      if newRowID is None:
+        raise RuntimeError('Failed to resolve new template row ID after insert.')
+
+      template.rowID = newRowID
       self._SyncTemplateTagsForRowID(template.rowID, template.metadata, cursor)
       template.state = State.EXISTING
 
@@ -227,11 +232,11 @@ class TemplateDB:
 
       self._SyncTemplateTagsForRowID(templateRowID, template.metadata, cursor)
       template.rowID = templateRowID
-      template.state = State.EXISTING
+      template.state= State.EXISTING
 
   def UpsertTemplateByTitle(self, template: emClasses.EmailTemplate) -> None:
     """Add or update template and metadata by title."""
-    row = self._FetchTemplateRowByTitle(template.title)
+    row: tuple[int, str, str] | None = self._FetchTemplateRowByTitle(template.title)
 
     if row is None:
       self.AddTemplate(template)
@@ -264,7 +269,7 @@ class TemplateDB:
     if template.rowID:
       return template.rowID
 
-    row = self._FetchTemplateRowByTitle(template.title)
+    row: tuple[int, str, str] | None = self._FetchTemplateRowByTitle(template.title)
     if row is None:
       raise AccessNullRowID()
 
@@ -272,15 +277,15 @@ class TemplateDB:
 
     return template.rowID
 
-  def _NormalizeTagList(self, tags: list[emClasses.MetadataTag | str] | None) -> list[str]:
+  def _NormalizeTagList(self, tags: Sequence[emClasses.MetadataTag | str] | None) -> list[str]:
     """Normalize tags to trimmed lower-case unique list preserving order."""
     if tags is None:
       return []
 
     normalized: list[str] = []
     for tag in tags:
-      tagValue = tag.tag if isinstance(tag, emClasses.MetadataTag) else str(tag)
-      cleanedTag = tagValue.strip().lower()
+      tagValue: str = tag.tag if isinstance(tag, emClasses.MetadataTag) else str(tag)
+      cleanedTag: str = tagValue.strip().lower()
 
       if not cleanedTag:
         continue
@@ -292,7 +297,7 @@ class TemplateDB:
 
   def _FetchTemplateRowByTitle(self, title: str) -> tuple[int, str, str] | None:
     """Fetch template row by title."""
-    cursor = self.DB.cursor()
+    cursor: sqlite3.Cursor = self.DB.cursor()
     cursor.execute(
       """
         select uid, title, content
@@ -329,16 +334,20 @@ class TemplateDB:
       [tag],
     )
 
-    return cursor.lastrowid
+    newTagRowID = cursor.lastrowid
+    if newTagRowID is None:
+      raise RuntimeError(f'Failed to resolve row ID for tag "{tag}" after insert.')
+
+    return newTagRowID
 
   def _SyncTemplateTagsForRowID(
     self,
     templateRowID: int,
-    templateTags: list[emClasses.MetadataTag | str] | None,
+    templateTags: Sequence[emClasses.MetadataTag | str] | None,
     cursor: sqlite3.Cursor,
   ) -> None:
     """Sync template tag links to exactly match the provided tag list."""
-    desiredTags = self._NormalizeTagList(templateTags)
+    desiredTags: list[str] = self._NormalizeTagList(templateTags)
 
     cursor.execute(
       """
@@ -353,8 +362,8 @@ class TemplateDB:
     existing = cursor.fetchall()
     existingTags = {row[1]: row[0] for row in existing}
 
-    desiredTagSet = set(desiredTags)
-    existingTagSet = set(existingTags.keys())
+    desiredTagSet: set[str] = set(desiredTags)
+    existingTagSet: set[str] = set(existingTags.keys())
 
     for tag in desiredTagSet - existingTagSet:
       tagRowID = self._GetOrCreateTagRowID(tag, cursor)
