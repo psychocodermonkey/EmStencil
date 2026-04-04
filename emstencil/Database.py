@@ -21,6 +21,7 @@ from .Exceptions import AccessNullRowID
 
 class TemplateDB:
   """Data layer class for handling translation of data to and from the database."""
+
   _instance = None
 
   def __new__(db, *args, **kwargs):
@@ -34,7 +35,7 @@ class TemplateDB:
     self.DB = sqlite3.connect(DATABASE_FILE)
 
     # Be sure to enable foreign keys on database
-    self.DB.execute("pragma foreign_keys = ON")
+    self.DB.execute('pragma foreign_keys = ON')
 
   def getConnection(self) -> sqlite3.Connection:
     """Return connection to the database if special queries are needed."""
@@ -90,7 +91,7 @@ class TemplateDB:
     result: list[tuple[str, str, str]] = []
     for uid, title, content in templates:
       tags = sorted(tags_by_template.get(uid, []))
-      result.append((title, content, ",".join(tags)))
+      result.append((title, content, ','.join(tags)))
 
     return result
 
@@ -108,7 +109,7 @@ class TemplateDB:
         from vw_Templates_Tags
         where tmpRowID = ?;
       """,
-      [tmplt.rowID]
+      [tmplt.rowID],
     )
 
     # Build objects for the tags and append them to the template object.
@@ -131,7 +132,7 @@ class TemplateDB:
         from vw_Templates_Tags
         where tag = ?;
       """,
-      [srchTag]
+      [srchTag],
     )
 
     # Build the template objects from the query results.
@@ -173,7 +174,7 @@ class TemplateDB:
           insert into templates (title, content)
           values (?, ?);
         """,
-        [template.title, template.content]
+        [template.title, template.content],
       )
 
       template.rowID = cursor.lastrowid
@@ -192,7 +193,7 @@ class TemplateDB:
           delete from templateTags
           where tmplt_uid = ?;
         """,
-        [templateRowID]
+        [templateRowID],
       )
 
       # Remove the specific template from the database.
@@ -201,7 +202,7 @@ class TemplateDB:
           delete from templates
           where uid = ?;
         """,
-        [templateRowID]
+        [templateRowID],
       )
 
       # Clean up the tags table in case this was the only template utilizing the given tag.
@@ -221,7 +222,7 @@ class TemplateDB:
           set title = ?, content = ?
           where uid = ?;
         """,
-        [template.title, template.content, templateRowID]
+        [template.title, template.content, templateRowID],
       )
 
       self._SyncTemplateTagsForRowID(templateRowID, template.metadata, cursor)
@@ -298,7 +299,7 @@ class TemplateDB:
         from templates
         where title = ?;
       """,
-      [title]
+      [title],
     )
 
     row = cursor.fetchone()
@@ -313,7 +314,7 @@ class TemplateDB:
         from tags
         where tag = ?;
       """,
-      [tag]
+      [tag],
     )
     row = cursor.fetchone()
 
@@ -325,7 +326,7 @@ class TemplateDB:
         insert into tags (tag)
         values (?);
       """,
-      [tag]
+      [tag],
     )
 
     return cursor.lastrowid
@@ -334,7 +335,7 @@ class TemplateDB:
     self,
     templateRowID: int,
     templateTags: list[emClasses.MetadataTag | str] | None,
-    cursor: sqlite3.Cursor
+    cursor: sqlite3.Cursor,
   ) -> None:
     """Sync template tag links to exactly match the provided tag list."""
     desiredTags = self._NormalizeTagList(templateTags)
@@ -346,7 +347,7 @@ class TemplateDB:
         inner join templateTags tmtg on tmtg.tag_uid = tg.uid
         where tmtg.tmplt_uid = ?;
       """,
-      [templateRowID]
+      [templateRowID],
     )
 
     existing = cursor.fetchall()
@@ -362,7 +363,7 @@ class TemplateDB:
           insert into templateTags (tmplt_uid, tag_uid)
           values (?, ?);
         """,
-        [templateRowID, tagRowID]
+        [templateRowID, tagRowID],
       )
 
     for tag in existingTagSet - desiredTagSet:
@@ -371,7 +372,7 @@ class TemplateDB:
           delete from templateTags
           where tmplt_uid = ? and tag_uid = ?;
         """,
-        [templateRowID, existingTags[tag]]
+        [templateRowID, existingTags[tag]],
       )
 
     self.RemoveEmptyTags(cursor)

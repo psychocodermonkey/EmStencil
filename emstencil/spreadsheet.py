@@ -15,20 +15,18 @@
 from __future__ import annotations
 
 from zipfile import BadZipFile
-
 from openpyxl import Workbook
 from openpyxl import load_workbook
 from openpyxl.utils.exceptions import InvalidFileException
-
 from .Exceptions import InvalidImportFileType
 
 
-EXPORT_HEADERS: tuple[str, str, str] = ("Title", "Content", "Tags")
+EXPORT_HEADERS: tuple[str, str, str] = ('Title', 'Content', 'Tags')
 
 
 def _cell_str(value: object) -> str:
   if value is None:
-    return ""
+    return ''
   return str(value).strip()
 
 
@@ -53,8 +51,8 @@ def read_template_rows(path: str) -> list[tuple[str, str, list[str]]]:
       title = _cell_str(row[0] if row else None)
       content = _cell_str(row[1] if row and len(row) > 1 else None)
       raw_tags = row[2] if row and len(row) > 2 else None
-      tags_cell = _cell_str(raw_tags) if raw_tags is not None else ""
-      tag_parts = tags_cell.split(",") if tags_cell else []
+      tags_cell = _cell_str(raw_tags) if raw_tags is not None else ''
+      tag_parts = tags_cell.split(',') if tags_cell else []
       out.append((title, content, tag_parts))
 
   finally:

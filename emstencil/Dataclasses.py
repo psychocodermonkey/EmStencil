@@ -20,6 +20,7 @@ from .Exceptions import TemplateKeyValueMismatch, TemplateKeyValueNull
 
 class State(Enum):
   """State enum for use in dataclass objects to denote state."""
+
   ADDED, UPDATED, DELETED, EXISTING = range(0, 4)
 
 
@@ -93,7 +94,7 @@ class EmailTemplate:
     """Post initilization build internal requirements for template object."""
     # RegEx to match fields in the ${field} format, grabbing only the text
     wkFields = re.findall(r'\$\{(.*?)\}', self.content)
-    self.fields = dict(zip(wkFields, [None]*len(wkFields), strict=True))
+    self.fields = dict(zip(wkFields, [None] * len(wkFields), strict=True))
 
   def __str__(self) -> str:
     """User friendly string representation. (user)"""
@@ -104,7 +105,6 @@ class EmailTemplate:
     """Return modified text based on values from the internal dictionary."""
     value = self.content
     for key in self.fields:
-
       # Build the exact text to match to for replacement so we match the full string for replacement
       rEx = r'\$\{' + key + r'\}'
       rExMatch = re.findall(rEx, self.content)

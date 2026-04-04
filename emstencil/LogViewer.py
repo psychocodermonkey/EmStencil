@@ -16,7 +16,6 @@
 from pathlib import Path
 from PySide6.QtWidgets import QDialog, QVBoxLayout, QTextEdit, QPushButton
 from .Logging import LOGGER
-#from PySide6.QtCore import Qt
 
 
 class LogViewer(QDialog):
@@ -36,7 +35,7 @@ class LogViewer(QDialog):
     close_btn = QPushButton('Close')
     close_btn.clicked.connect(self.close)
     layout.addWidget(close_btn)
-    LOGGER.info("LogViewer init completed.")
+    LOGGER.info('LogViewer init completed.')
 
     # Load the log file content
     try:

@@ -33,23 +33,23 @@ def main() -> None:
 
   # Handle finding the application icon correctly from packaged or source layouts.
   if getattr(sys, 'frozen', False):
-      base_path = Path(sys.argv[0]).parent  # location of compiled app
+    base_path = Path(sys.argv[0]).parent  # location of compiled app
   else:
-      base_path = Path(__file__).parent     # normal source layout
+    base_path = Path(__file__).parent  # normal source layout
 
   # Detect platform and set the application icon appropriately.
-  if platform.system() == "Darwin":
+  if platform.system() == 'Darwin':
     icon_path = base_path / 'assets' / 'EmStencil_Dark.icns'
-    LOGGER.info(f"Using macOS icon: {icon_path}")
+    LOGGER.info(f'Using macOS icon: {icon_path}')
 
-  elif platform.system() == "Windows":
+  elif platform.system() == 'Windows':
     ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID('EmStencil.App')
     icon_path = base_path / 'assets' / 'EmStencil_Dark.ico'
-    LOGGER.info(f"Using Windows icon: {icon_path}")
+    LOGGER.info(f'Using Windows icon: {icon_path}')
 
   else:
-    icon_path = base_path / "assets" / "EmStencil_Dark.ico"
-    LOGGER.info(f"Using generic icon: {icon_path}")
+    icon_path = base_path / 'assets' / 'EmStencil_Dark.ico'
+    LOGGER.info(f'Using generic icon: {icon_path}')
 
   # icon_path = Path(__file__).parent / "assets" / "EmStencil_Dark.ico"
 
@@ -57,7 +57,7 @@ def main() -> None:
   app = QApplication(sys.argv)
   app.setWindowIcon(QIcon(str(icon_path)))
   screen = emMain.EmStencil()
-  LOGGER.info("Showing main window...")
+  LOGGER.info('Showing main window...')
   screen.show()
 
   sys.exit(app.exec())
@@ -79,7 +79,6 @@ def onExit() -> None:
 # If the EmStencil.py is run (instead of imported as a module),
 # call the main() function:
 if __name__ == '__main__':
-
   from emstencil import is_initilized
 
   # Register the function to execute on ending the script
@@ -89,4 +88,4 @@ if __name__ == '__main__':
     LOGGER.info('Launching application...')
     main()
   else:
-    LOGGER.error("Initialization failed. Please check the logs.")
+    LOGGER.error('Initialization failed. Please check the logs.')

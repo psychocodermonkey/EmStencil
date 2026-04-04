@@ -13,9 +13,7 @@
 """
 
 from pathlib import Path
-
 from PySide6.QtWidgets import QFileDialog, QMessageBox
-
 from .Database import TemplateDB
 from .Logging import LOGGER
 from .spreadsheet import write_templates_workbook
@@ -25,29 +23,29 @@ def exportTemplates(parent) -> bool:
   """Prompt for a save path and write all templates to an .xlsx file."""
   path, _ = QFileDialog.getSaveFileName(
     parent,
-    "Export Templates",
-    "",
-    "Excel Files (*.xlsx)",
+    'Export Templates',
+    '',
+    'Excel Files (*.xlsx)',
   )
   if not path:
-    LOGGER.info("Template export canceled (no path).")
+    LOGGER.info('Template export canceled (no path).')
     return False
 
   p = Path(path)
-  if p.suffix.lower() != ".xlsx":
-    p = p.with_suffix(".xlsx")
+  if p.suffix.lower() != '.xlsx':
+    p = p.with_suffix('.xlsx')
     path = str(p)
 
   if p.exists():
     reply = QMessageBox.question(
       parent,
-      "Overwrite",
+      'Overwrite',
       f'"{path}" already exists. Overwrite?',
       QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.Cancel,
       QMessageBox.StandardButton.Cancel,
     )
     if reply != QMessageBox.StandardButton.Yes:
-      LOGGER.info("Template export canceled (overwrite declined).")
+      LOGGER.info('Template export canceled (overwrite declined).')
       return False
 
   db = TemplateDB()
@@ -56,10 +54,10 @@ def exportTemplates(parent) -> bool:
   try:
     write_templates_workbook(path, rows)
   except OSError as e:
-    LOGGER.error(f"Export failed: {e}")
-    QMessageBox.critical(parent, "Export failed", str(e))
+    LOGGER.error(f'Export failed: {e}')
+    QMessageBox.critical(parent, 'Export failed', str(e))
     return False
 
-  LOGGER.info(f"Exported {len(rows)} template(s) to {path}")
-  QMessageBox.information(parent, "Export", "Export completed.")
+  LOGGER.info(f'Exported {len(rows)} template(s) to {path}')
+  QMessageBox.information(parent, 'Export', 'Export completed.')
   return True

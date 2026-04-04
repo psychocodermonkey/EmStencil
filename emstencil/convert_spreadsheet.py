@@ -15,7 +15,6 @@
 import argparse
 import sqlite3
 from dataclasses import dataclass, field
-
 from .spreadsheet import read_template_rows
 
 

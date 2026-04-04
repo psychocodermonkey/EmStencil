@@ -13,9 +13,7 @@
 """
 
 from dataclasses import dataclass, field
-
 from PySide6.QtWidgets import QMessageBox
-
 from .Database import TemplateDB
 from .Dataclasses import EmailTemplate, MetadataTag
 from .SelectFile import FileSelectionDialog
@@ -34,11 +32,11 @@ def importTemplates(parent) -> bool:
   if dialog.exec():  # User pressed OK
     file_path = dialog.selected_file
     success = appConvertSpreadsheet(file_path, DATA_DIR, DATABASE_FILE)
-    LOGGER.info("Template import completed...")
+    LOGGER.info('Template import completed...')
 
   else:
     QMessageBox.information(parent, 'Canceled', 'No file selected.')
-    LOGGER.info("Template import canceled...")
+    LOGGER.info('Template import canceled...')
 
   return success
 
@@ -52,11 +50,13 @@ def appConvertSpreadsheet(xls_path, datadir, database) -> bool:
 
   return convertSpreadsheet(xls_path, db)
 
+
 # Define a class on the fly to assign the data to to make accessing it easier.
 @dataclass
 class XlatedRow:
   """Data class for spreadsheet columns, gives meaningful names in program.
-     Define names for columns so that the object has names that are easy to use."""
+  Define names for columns so that the object has names that are easy to use."""
+
   title: str
   content: str
   tags: list
@@ -89,7 +89,7 @@ def convertSpreadsheet(xlsx_path: str, db: TemplateDB | None = None) -> bool:
   seenTitles: set[str] = set()
   duplicateTitles: set[str] = set()
 
-  LOGGER.info("Reading spreadsheet (first sheet, row 1 skipped as header)...")
+  LOGGER.info('Reading spreadsheet (first sheet, row 1 skipped as header)...')
   raw_rows = read_template_rows(xlsx_path)
 
   for title, content, tag_parts in raw_rows:
@@ -103,7 +103,7 @@ def convertSpreadsheet(xlsx_path: str, db: TemplateDB | None = None) -> bool:
     templateRows.append(row)
 
   # Log how many rows were in the spreadsheet.
-  LOGGER.info(f"{len(templateRows)} templates loaded from spreadsheet.")
+  LOGGER.info(f'{len(templateRows)} templates loaded from spreadsheet.')
 
   if duplicateTitles:
     duplicateList = ', '.join(sorted(duplicateTitles))

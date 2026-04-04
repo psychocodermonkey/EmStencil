@@ -24,7 +24,6 @@ def get_user_data_dir() -> Path:
 
   system = platform.system()
 
-
   if system == 'Darwin':
     base = Path.home() / 'Library' / 'Application Support' / 'dev.psychocodermonkey' / 'EmStencil'
 
@@ -45,6 +44,6 @@ def get_user_data_dir() -> Path:
   return base
 
 
-DATA_DIR = get_user_data_dir()                      # Data directory for persistent storage.
-DATABASE_FILE = DATA_DIR / 'templates.db'           # Path for database file.
-LOG_PATH = DATA_DIR / 'runlog.log'                  # Path for runtime log file.
+DATA_DIR = get_user_data_dir()  # Data directory for persistent storage.
+DATABASE_FILE = DATA_DIR / 'templates.db'  # Path for database file.
+LOG_PATH = DATA_DIR / 'runlog.log'  # Path for runtime log file.

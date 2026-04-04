@@ -32,11 +32,12 @@ from .LogViewer import LogViewer
 
 class EmStencil(QMainWindow):
   """Class for main window for selecting and working with templates."""
+
   def __init__(self) -> None:
     super(EmStencil, self).__init__()
 
     # Set window title
-    self.setWindowTitle("EmStencil")
+    self.setWindowTitle('EmStencil')
 
     # Set up the menu bar and make sure it is attached to the window.
     self.menubar = self.menuBar()
@@ -92,7 +93,7 @@ class EmStencil(QMainWindow):
     # Create instance of application widget and add to main window.
     # selectionForm = TemplateSelector(templateList, metaTags, parent=self)
     self.setCentralWidget(loadTemplateSelector(self))
-    LOGGER.info("MainWindow initialized successfully.")
+    LOGGER.info('MainWindow initialized successfully.')
 
   def importTemplate(self) -> None:
     if importTemplates(self):
@@ -107,10 +108,10 @@ class EmStencil(QMainWindow):
     old_widget = self.takeCentralWidget()
     if old_widget:
       old_widget.deleteLater()
-      LOGGER.info("Releasing old central widget.")
+      LOGGER.info('Releasing old central widget.')
 
     self.setCentralWidget(loadTemplateSelector(self))
-    LOGGER.info("New template selector loaded successfully.")
+    LOGGER.info('New template selector loaded successfully.')
 
   def newTemplate(self) -> None:
     """Open editor in new-template mode."""
@@ -122,7 +123,7 @@ class EmStencil(QMainWindow):
     """Open editor in edit mode for the selected template."""
     currentWidget = self.centralWidget()
     if not currentWidget or not hasattr(currentWidget, 'getSelectedTemplate'):
-      QMessageBox.information(self, "Information", "No template selected to edit.")
+      QMessageBox.information(self, 'Information', 'No template selected to edit.')
       return
 
     selectedTemplate = currentWidget.getSelectedTemplate()
@@ -131,7 +132,7 @@ class EmStencil(QMainWindow):
       or selectedTemplate.rowID is None
       or selectedTemplate.rowID <= 0
     ):
-      QMessageBox.information(self, "Information", "No template selected to edit.")
+      QMessageBox.information(self, 'Information', 'No template selected to edit.')
       return
 
     editor = TemplateEditorDialog(template=selectedTemplate, parent=self)
@@ -143,7 +144,8 @@ class EmStencil(QMainWindow):
     Open and display runtime logs to the user.
     """
     from emstencil import LOG_PATH
-    LOGGER.info("Showing runtime logs.")
+
+    LOGGER.info('Showing runtime logs.')
     logviewer = LogViewer(LOG_PATH, self)
     logviewer.exec()
 
@@ -151,12 +153,12 @@ class EmStencil(QMainWindow):
     """
     Show about window.
     """
-    LOGGER.info("Showing about window.")
+    LOGGER.info('Showing about window.')
     userMessage = QMessageBox()
     userMessage.setIcon(QMessageBox.Icon.Information)
     userMessage.setWindowTitle('About EmStencil')
     userMessage.setText(
-    """
+      """
     EmStencil - Email Stencils
     Version: 1.0.0
     Copyright (C) 2023 - 2025

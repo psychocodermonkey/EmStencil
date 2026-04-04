@@ -13,13 +13,22 @@
 """
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QDialog, QHBoxLayout, QLabel, QLineEdit, QPushButton, QVBoxLayout, QMainWindow
+from PySide6.QtWidgets import (
+  QDialog,
+  QHBoxLayout,
+  QLabel,
+  QLineEdit,
+  QPushButton,
+  QVBoxLayout,
+  QMainWindow,
+)
 from .Dataclasses import EmailTemplate
 from .Exceptions import TemplateKeyValueNull
 
 
 class FieldEntryDialog(QDialog):
   """Build dialog to get data for the fields in the field dictionary."""
+
   def __init__(self, template: EmailTemplate, parent=None):
     super().__init__()
     self.setWindowTitle('Fields available for template')
@@ -35,8 +44,10 @@ class FieldEntryDialog(QDialog):
       return max(min(maxn, n), minn)
 
     fontPointSize: int = QLabel().font().pointSize()
-    minLengthForKeys: int   = (clamp(max(len(k) for k in self.dictionary), 5, 50) * fontPointSize)
-    minLengthForData: int = (clamp(max(len(k) for k in self.dictionary), 15, 120) * fontPointSize) + 10
+    minLengthForKeys: int = clamp(max(len(k) for k in self.dictionary), 5, 50) * fontPointSize
+    minLengthForData: int = (
+      clamp(max(len(k) for k in self.dictionary), 15, 120) * fontPointSize
+    ) + 10
 
     # Build the dialog on the fly for the keys in the database.
     for key, value in self.dictionary.items():
@@ -64,7 +75,7 @@ class FieldEntryDialog(QDialog):
       self.layout.addLayout(fieldGroup)
 
     # Connect tthe accept/submit button for the dialog form.
-    button = QPushButton("Submit")
+    button = QPushButton('Submit')
     button.setDefault(True)
     button.clicked.connect(self.submit)
     button.clicked.connect(self.close)

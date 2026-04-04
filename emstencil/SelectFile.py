@@ -30,7 +30,7 @@ class FileSelectionDialog(QDialog):
     # Widgets
     self.label = QLabel('Choose a file to import:')
     self.path_display = QLineEdit()
-    self.path_display.setFixedWidth(minLengthForData)    # Enforce a good size for the path.
+    self.path_display.setFixedWidth(minLengthForData)  # Enforce a good size for the path.
     self.path_display.setReadOnly(True)
 
     self.btn_browse = QPushButton('Browse...')
