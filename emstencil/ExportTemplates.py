@@ -12,6 +12,8 @@
 ........1.........2.........3.........4.........5.........6.........7.........8.........9.........0.........1.........2.........3..
 """
 
+from __future__ import annotations
+
 from pathlib import Path
 from PySide6.QtWidgets import QFileDialog, QMessageBox
 from .Database import TemplateDB

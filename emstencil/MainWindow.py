@@ -12,12 +12,10 @@
 ........1.........2.........3.........4.........5.........6.........7.........8.........9.........0.........1.........2.........3..
 """
 
-# TODO: Write this to launch other windows etc for C.R.U.D.
-# TODO: Add menu bar to form.
 # TODO: Menu bar should contain:
-#         File> Open | Save | Import | Exit Edit>
-#         Edit> Template?
 #         Help> Instructions | About
+
+from __future__ import annotations
 
 from PySide6.QtGui import QAction
 from PySide6.QtWidgets import QMainWindow, QMenu, QMessageBox
