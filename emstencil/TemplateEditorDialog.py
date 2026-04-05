@@ -12,6 +12,8 @@
 ........1.........2.........3.........4.........5.........6.........7.........8.........9.........0.........1.........2.........3..
 """
 
+from __future__ import annotations
+
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent, QKeySequence, QShortcut
 from PySide6.QtWidgets import QDialog, QLabel, QLineEdit, QTextEdit, QPushButton
@@ -22,6 +24,7 @@ from .Dataclasses import EmailTemplate, MetadataTag
 
 class TemplateEditorDialog(QDialog):
   """Dialog for creating, editing, and deleting templates."""
+
   def __init__(self, template: EmailTemplate | None = None, parent=None) -> None:
     super(TemplateEditorDialog, self).__init__(parent)
     self.db = TemplateDB()
@@ -36,24 +39,24 @@ class TemplateEditorDialog(QDialog):
 
   def SetupUI(self) -> None:
     """Build dialog controls."""
-    self.setWindowTitle("Template Editor")
+    self.setWindowTitle('Template Editor')
     self.setMinimumWidth(640)
     self.setMinimumHeight(420)
 
     layout = QVBoxLayout()
     self.setLayout(layout)
 
-    titleLabel = QLabel("Title")
+    titleLabel = QLabel('Title')
     self.titleField = QLineEdit()
     layout.addWidget(titleLabel)
     layout.addWidget(self.titleField)
 
-    tagsLabel = QLabel("Tags")
+    tagsLabel = QLabel('Tags')
     self.tagsField = QLineEdit()
     layout.addWidget(tagsLabel)
     layout.addWidget(self.tagsField)
 
-    templateLabel = QLabel("Template")
+    templateLabel = QLabel('Template')
     self.templateField = QTextEdit()
     layout.addWidget(templateLabel)
     layout.addWidget(self.templateField)
@@ -62,9 +65,9 @@ class TemplateEditorDialog(QDialog):
     buttonLayout.setAlignment(Qt.AlignmentFlag.AlignRight)
     layout.addLayout(buttonLayout)
 
-    self.saveButton = QPushButton("Save")
-    self.cancelButton = QPushButton("Cancel")
-    self.deleteButton = QPushButton("Delete")
+    self.saveButton = QPushButton('Save')
+    self.cancelButton = QPushButton('Cancel')
+    self.deleteButton = QPushButton('Delete')
 
     buttonLayout.addWidget(self.saveButton)
     buttonLayout.addWidget(self.cancelButton)
@@ -82,7 +85,7 @@ class TemplateEditorDialog(QDialog):
     self.saveButton.clicked.connect(self.SaveClicked)
     self.cancelButton.clicked.connect(self.CancelClicked)
     self.deleteButton.clicked.connect(self.DeleteClicked)
-    self.saveShortcut = QShortcut(QKeySequence("Ctrl+S"), self)
+    self.saveShortcut = QShortcut(QKeySequence('Ctrl+S'), self)
     self.saveShortcut.activated.connect(self.SaveClicked)
 
   def LoadValues(self) -> None:
@@ -92,7 +95,7 @@ class TemplateEditorDialog(QDialog):
     if self.isEditMode and self.template is not None:
       self.titleField.setText(self.template.title)
       self.templateField.setPlainText(self.template.content)
-      self.tagsField.setText(", ".join(tag.tag for tag in self.template.metadata))
+      self.tagsField.setText(', '.join(tag.tag for tag in self.template.metadata))
 
     else:
       self.titleField.clear()
@@ -112,8 +115,8 @@ class TemplateEditorDialog(QDialog):
     """Create template object from dialog fields."""
     title = self.titleField.text()
     content = self.templateField.toPlainText()
-    tags = self.tagsField.text().split(",")
-    metadata = [MetadataTag(tag) for tag in tags if tag != ""]
+    tags = self.tagsField.text().split(',')
+    metadata = [MetadataTag(tag) for tag in tags if tag != '']
 
     template = EmailTemplate(title, content)
     template.metadata = metadata
@@ -142,10 +145,10 @@ class TemplateEditorDialog(QDialog):
 
     userChoice = QMessageBox.question(
       self,
-      "Confirm Delete",
-      "Delete this template?",
+      'Confirm Delete',
+      'Delete this template?',
       QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-      QMessageBox.StandardButton.No
+      QMessageBox.StandardButton.No,
     )
 
     if userChoice == QMessageBox.StandardButton.Yes:
@@ -164,10 +167,10 @@ class TemplateEditorDialog(QDialog):
 
     userChoice = QMessageBox.question(
       self,
-      "Unsaved Changes",
-      "Changes not saved. Discard changes?",
+      'Unsaved Changes',
+      'Changes not saved. Discard changes?',
       QMessageBox.StandardButton.Discard | QMessageBox.StandardButton.Cancel,
-      QMessageBox.StandardButton.Cancel
+      QMessageBox.StandardButton.Cancel,
     )
 
     return userChoice == QMessageBox.StandardButton.Discard

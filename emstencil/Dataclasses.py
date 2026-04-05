@@ -12,6 +12,8 @@
 ........1.........2.........3.........4.........5.........6.........7.........8.........9.........0.........1.........2.........3..
 """
 
+from __future__ import annotations
+
 import re
 from enum import Enum
 from dataclasses import dataclass, field
@@ -20,6 +22,7 @@ from .Exceptions import TemplateKeyValueMismatch, TemplateKeyValueNull
 
 class State(Enum):
   """State enum for use in dataclass objects to denote state."""
+
   ADDED, UPDATED, DELETED, EXISTING = range(0, 4)
 
 
@@ -93,7 +96,7 @@ class EmailTemplate:
     """Post initilization build internal requirements for template object."""
     # RegEx to match fields in the ${field} format, grabbing only the text
     wkFields = re.findall(r'\$\{(.*?)\}', self.content)
-    self.fields = dict(zip(wkFields, [None]*len(wkFields), strict=True))
+    self.fields = dict(zip(wkFields, [None] * len(wkFields), strict=True))
 
   def __str__(self) -> str:
     """User friendly string representation. (user)"""
@@ -104,7 +107,6 @@ class EmailTemplate:
     """Return modified text based on values from the internal dictionary."""
     value = self.content
     for key in self.fields:
-
       # Build the exact text to match to for replacement so we match the full string for replacement
       rEx = r'\$\{' + key + r'\}'
       rExMatch = re.findall(rEx, self.content)
@@ -135,7 +137,7 @@ class EmailTemplate:
       # Add values, ensuring we add ALL values to the dictionary.
       # Match case based on the case of the field used in the template.
       for key in values:
-        if self.fields[key]:
+        if values[key] is not None:
           if key.islower():
             self.fields[key] = values[key].lower()
 

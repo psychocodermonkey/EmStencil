@@ -13,6 +13,8 @@
 ........1.........2.........3.........4.........5.........6.........7.........8.........9.........0.........1.........2.........3..
 """
 
+from __future__ import annotations
+
 from PySide6.QtWidgets import QDialog, QFileDialog, QVBoxLayout, QHBoxLayout
 from PySide6.QtWidgets import QPushButton, QLabel, QLineEdit
 
@@ -30,7 +32,7 @@ class FileSelectionDialog(QDialog):
     # Widgets
     self.label = QLabel('Choose a file to import:')
     self.path_display = QLineEdit()
-    self.path_display.setFixedWidth(minLengthForData)    # Enforce a good size for the path.
+    self.path_display.setFixedWidth(minLengthForData)  # Enforce a good size for the path.
     self.path_display.setReadOnly(True)
 
     self.btn_browse = QPushButton('Browse...')

@@ -13,18 +13,20 @@
 ........1.........2.........3.........4.........5.........6.........7.........8.........9.........0.........1.........2.........3..
 """
 
+from __future__ import annotations
+
 import logging
 from emstencil import LOG_PATH
 
 
 # Configure logging
 logging.basicConfig(
-    level=logging.DEBUG,  # Capture all levels
-    format="%(asctime)s - %(levelname)s - %(message)s",
-    handlers=[
-        logging.FileHandler(LOG_PATH, mode="w"),  # Overwrite each run
-        logging.StreamHandler()  # Defaults to stderr; we'll filter below
-    ]
+  level=logging.DEBUG,  # Capture all levels
+  format='%(asctime)s - %(levelname)s - %(message)s',
+  handlers=[
+    logging.FileHandler(LOG_PATH, mode='w'),  # Overwrite each run
+    logging.StreamHandler(),  # Defaults to stderr; we'll filter below
+  ],
 )
 
 # Get the root logger

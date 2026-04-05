@@ -12,9 +12,18 @@
 ........1.........2.........3.........4.........5.........6.........7.........8.........9.........0.........1.........2.........3..
 """
 
+from __future__ import annotations
+
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QFontMetrics, QKeySequence, QShortcut
-from PySide6.QtWidgets import QApplication, QMessageBox, QWidget, QHBoxLayout, QVBoxLayout
+from PySide6.QtGui import QFontMetrics, QKeySequence, QShortcut, QClipboard
+from PySide6.QtWidgets import (
+  QApplication,
+  QMessageBox,
+  QWidget,
+  QHBoxLayout,
+  QVBoxLayout,
+  QMainWindow,
+)
 from PySide6.QtWidgets import QLabel, QPushButton, QTextEdit, QComboBox
 from .Database import TemplateDB
 from .FieldEntryDialog import FieldEntryDialog
@@ -24,19 +33,20 @@ from .Logging import LOGGER
 
 class TemplateSelector(QWidget):
   """Class for main window for selecting and working with templates."""
+
   def __init__(self, templateList: list, metaTags: list, parent=None) -> None:
     super(TemplateSelector, self).__init__()
     # Work fields and local variables for the main application.
-    fontPointSize = QLabel().font().pointSize()
-    self.templateList = templateList
-    self.metaTags = metaTags
-    self.clipboard = QApplication.clipboard()
+    fontPointSize: int = QLabel().font().pointSize()
+    self.templateList: list[EmailTemplate] = templateList
+    self.metaTags: list[MetadataTag] = metaTags
+    self.clipboard: QClipboard = QApplication.clipboard()
     self.db = TemplateDB()
-    self.parent = parent
+    self.parent: QMainWindow | None = parent
 
     # Set basics for main application window.
     self.setWindowTitle('EmStencil - Templated email builder')
-    self.layout = QVBoxLayout()
+    self.layout: QVBoxLayout = QVBoxLayout()
     self.setLayout(self.layout)
 
     # Set up functionality for keyboard interaction.
@@ -60,11 +70,11 @@ class TemplateSelector(QWidget):
 
     # Add buttons to the main layout
     self.layout.addLayout(self.buildButtons())
-    LOGGER.info("Template selection __init__ completed.")
+    LOGGER.info('Template selection __init__ completed.')
 
   def buildTemplateSelectGroup(self) -> None:
     """Build the boxes to filter out and select what template to work with."""
-    fontPointSize = QLabel().font().pointSize()
+    fontPointSize: int = QLabel().font().pointSize()
     self.templateSelectionGroup = QHBoxLayout()
 
     # Build layouts to be nexted in this group to allow differing alignment.
@@ -74,12 +84,12 @@ class TemplateSelector(QWidget):
     comboBoxAreaButtons.setAlignment(Qt.AlignmentFlag.AlignRight)
 
     # Build the template list combo box and add it to the combo box group.
-    self.templateComboBox = self.buildComboBoxData(self.templateList)
+    self.templateComboBox: QComboBox = self.buildComboBoxData(self.templateList)
     self.templateComboBox.activated.connect(self.templateComboBoxSelected)
     comboBoxGroup.addWidget(self.templateComboBox)
 
     # Build the meta tag list combo box and add it to the combo box group.
-    self.metaTagComboBox = self.buildComboBoxData(self.metaTags)
+    self.metaTagComboBox: QComboBox = self.buildComboBoxData(self.metaTags)
     self.metaTagComboBox.activated.connect(self.metaTagComboBoxSelected)
     comboBoxGroup.addWidget(self.metaTagComboBox)
 
@@ -98,7 +108,7 @@ class TemplateSelector(QWidget):
 
     # Add the template selection group to the main layout.
     self.layout.addLayout(self.templateSelectionGroup)
-    LOGGER.info("Template selection group added to main layout.")
+    LOGGER.info('Template selection group added to main layout.')
 
   def buildComboBoxData(self, items: list) -> QComboBox:
     """Build a combo box widget from a list of EmailTemplate/MetadataTag objects."""
@@ -109,9 +119,9 @@ class TemplateSelector(QWidget):
     minWidth: int = 60
 
     for item in items:
-      stringWidth = fontMetrics.horizontalAdvance(str(item) + ' ' * 3)
+      stringWidth: int = fontMetrics.horizontalAdvance(str(item) + ' ' * 3)
       if stringWidth > minWidth:
-        minWidth = stringWidth
+        minWidth: int = stringWidth
       comboBox.addItem(str(item), item)
     comboBox.setFixedWidth(int(minWidth * 1.5))
 
@@ -128,20 +138,20 @@ class TemplateSelector(QWidget):
     buttonLayout.setAlignment(Qt.AlignmentFlag.AlignRight)
 
     # Define the select button and add it to the button layout.
-    selectButton = QPushButton("Select")
+    selectButton = QPushButton('Select')
     selectButton.setMinimumWidth(minWidth)
     selectButton.setMaximumWidth(minWidth * 2)
     selectButton.setDefault(True)  # Setting this even thougn it doesn't work outside of a dialog
     selectButton.clicked.connect(self.selectClicked)
     buttonLayout.addWidget(selectButton)
 
-    copyButton = QPushButton("Copy")
+    copyButton = QPushButton('Copy')
     copyButton.setMinimumWidth(minWidth)
     copyButton.setMaximumWidth(minWidth * 2)
     copyButton.clicked.connect(self.copyCLicked)
     buttonLayout.addWidget(copyButton)
 
-    exitButton = QPushButton("Exit")
+    exitButton = QPushButton('Exit')
     exitButton.setMinimumWidth(minWidth)
     exitButton.setMaximumWidth(minWidth * 2)
     exitButton.clicked.connect(self.exitClicked)
@@ -169,7 +179,7 @@ class TemplateSelector(QWidget):
       self.templateList = self.db.FetchTemplatesForTag(str(selectedMetadataTag))
       self.templateList = list(map(self.db.FetchMetadataForTemplate, self.templateList))
 
-    else: # ALL is the only one in the list, means the DB or that table is empty, redraw and exit.
+    else:  # ALL is the only one in the list, means the DB or that table is empty, redraw and exit.
       self.repaint()
       return
 
@@ -184,7 +194,7 @@ class TemplateSelector(QWidget):
     """Send informaiotnal messege to the user."""
     userMessage = QMessageBox()
     userMessage.setIcon(QMessageBox.Icon.Information)
-    userMessage.setWindowTitle("Information")
+    userMessage.setWindowTitle('Information')
     userMessage.setText(msg)
     LOGGER.info(msg)
     userMessage.exec()
@@ -193,7 +203,7 @@ class TemplateSelector(QWidget):
     """Send error emssage to the user."""
     userMessage = QMessageBox()
     userMessage.setIcon(QMessageBox.Icon.Critical)
-    userMessage.setWindowTitle("Error")
+    userMessage.setWindowTitle('Error')
     userMessage.setText(msg)
     LOGGER.error(msg)
     userMessage.exec()
@@ -214,10 +224,10 @@ class TemplateSelector(QWidget):
     selectedEmailTemplate = self.templateComboBox.currentData()
     if len(selectedEmailTemplate.fields) > 0:
       self.editScreen = FieldEntryDialog(selectedEmailTemplate, parent=self)
-      LOGGER.info("Displaying field entry dialog...")
+      LOGGER.info('Displaying field entry dialog...')
       self.editScreen.show()
     else:
-      self.sendUserInfoMessage("Template has no fields defined.")
+      self.sendUserInfoMessage('Template has no fields defined.')
 
   def updateTextArea(self, tmplt: EmailTemplate) -> None:
     """Upate the text area with the template"""
@@ -235,7 +245,7 @@ class TemplateSelector(QWidget):
       self.clipboard.setText(selectedEmailTemplate.replacedText)
     else:
       LOGGER.info('All values must be entered for template to be copied to clipboard...')
-      self.sendUserInfoMessage("You must enter values for all fields in the template.")
+      self.sendUserInfoMessage('You must enter values for all fields in the template.')
 
   def getSelectedTemplate(self) -> EmailTemplate | None:
     """Return selected template object from the combo box."""

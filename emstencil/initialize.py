@@ -13,6 +13,8 @@
 ........1.........2.........3.........4.........5.........6.........7.........8.........9.........0.........1.........2.........3..
 """
 
+from __future__ import annotations
+
 import sys
 import sqlite3
 from pathlib import Path
@@ -43,10 +45,10 @@ def createDirectory() -> bool:
   """
   if not DATA_DIR.exists():
     DATA_DIR.mkdir(parents=True, exist_ok=True)
-    LOGGER.info(f"Created data directory: {Path(__file__).parent.joinpath(DATA_DIR)}")
+    LOGGER.info(f'Created data directory: {Path(__file__).parent.joinpath(DATA_DIR)}')
 
   else:
-    LOGGER.info(f"Data directory {Path(__file__).parent.joinpath(DATA_DIR)} found.")
+    LOGGER.info(f'Data directory {Path(__file__).parent.joinpath(DATA_DIR)} found.')
 
   return DATA_DIR.exists()
 
@@ -57,25 +59,25 @@ def getSchemaPath() -> Path:
   """
 
   ddl_locations = {
-    "source": Path(__file__).parent / 'templates.sql',
-    "frozen": Path(sys.argv[0]).parent / 'templates.sql',
+    'source': Path(__file__).parent / 'templates.sql',
+    'frozen': Path(sys.argv[0]).parent / 'templates.sql',
   }
 
   if ddl_locations['source'].exists():
     # DDL is in the package directory and we are running from source.
     base = ddl_locations['source']
-    LOGGER.info(f"Returning DDL path for source state: {base}")
+    LOGGER.info(f'Returning DDL path for source state: {base}')
 
   elif ddl_locations['frozen'].exists():
     # DDL exists at the base direcotry in a packaged method.
     base = ddl_locations['frozen']
-    LOGGER.info(f"Returning DDL path for frozen state: {base}")
+    LOGGER.info(f'Returning DDL path for frozen state: {base}')
 
   else:
     # The DDL wasn't in either locaton we expect.
     LOGGER.error('Could not find DDL file for database schema.')
     # Dump dictionary with a list comprehension to check the locations.
-    checked = ", ".join(f"{k}: {v}" for k, v in ddl_locations.items())
+    checked = ', '.join(f'{k}: {v}' for k, v in ddl_locations.items())
     raise DatabaseDDLSourceMissing(checked)
 
   return base
@@ -85,21 +87,23 @@ def createDatabase() -> bool:
   """
   Create the database inside the data directory if it does not exist.
   """
-  #schemaDDL = Path(__file__).parent.joinpath('templates.sql')
+  # schemaDDL = Path(__file__).parent.joinpath('templates.sql')
   schemaDDL = getSchemaPath()
-  LOGGER.info(f"Schema DDL loaded from: {schemaDDL}")
+  LOGGER.info(f'Schema DDL loaded from: {schemaDDL}')
 
   if not DATABASE_FILE.exists():
-    LOGGER.info(f"Creating database: {Path(__file__).parent.joinpath(DATABASE_FILE)}")
-    database =  sqlite3.connect(DATABASE_FILE)
+    LOGGER.info(f'Creating database: {Path(__file__).parent.joinpath(DATABASE_FILE)}')
+    database = sqlite3.connect(DATABASE_FILE)
     dbCursor = database.cursor()
 
-    LOGGER.info(f"Reading internal schema file ({schemaDDL}) for database...")
+    LOGGER.info(f'Reading internal schema file ({schemaDDL}) for database...')
     with open(schemaDDL) as fp:
       dbCursor.executescript(fp.read())
 
   else:
-    LOGGER.info(f"Using existing database found at: {Path(__file__).parent.joinpath(DATABASE_FILE)}")
+    LOGGER.info(
+      f'Using existing database found at: {Path(__file__).parent.joinpath(DATABASE_FILE)}'
+    )
 
   return DATABASE_FILE.exists()
 
@@ -110,17 +114,17 @@ def initilizeData() -> bool:
   """
   if createDirectory():
     if createDatabase():
-      LOGGER.info("All setup processes completed normally.")
+      LOGGER.info('All setup processes completed normally.')
 
     else:
-      LOGGER.info("Error during createDatabase.")
+      LOGGER.info('Error during createDatabase.')
 
   else:
-    LOGGER.info("Error creating data directory.")
+    LOGGER.info('Error creating data directory.')
     return False
 
   return True
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
   is_initilized()

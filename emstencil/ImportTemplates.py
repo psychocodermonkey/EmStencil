@@ -12,15 +12,15 @@
 ........1.........2.........3.........4.........5.........6.........7.........8.........9.........0.........1.........2.........3..
 """
 
+from __future__ import annotations
+
 from dataclasses import dataclass, field
-from sxl import Workbook, col2num
-from zipfile import BadZipFile
 from PySide6.QtWidgets import QMessageBox
 from .Database import TemplateDB
 from .Dataclasses import EmailTemplate, MetadataTag
 from .SelectFile import FileSelectionDialog
 from .Logging import LOGGER
-from .Exceptions import InvalidImportFileType
+from .spreadsheet import read_template_rows
 
 
 def importTemplates(parent) -> bool:
@@ -34,11 +34,11 @@ def importTemplates(parent) -> bool:
   if dialog.exec():  # User pressed OK
     file_path = dialog.selected_file
     success = appConvertSpreadsheet(file_path, DATA_DIR, DATABASE_FILE)
-    LOGGER.info("Template import completed...")
+    LOGGER.info('Template import completed...')
 
   else:
     QMessageBox.information(parent, 'Canceled', 'No file selected.')
-    LOGGER.info("Template import canceled...")
+    LOGGER.info('Template import canceled...')
 
   return success
 
@@ -50,20 +50,15 @@ def appConvertSpreadsheet(xls_path, datadir, database) -> bool:
   LOGGER.info(f'Global database path is: {database}')
   db = TemplateDB()
 
-  # constants - Define names for thigs we want to make easily modifiable
-  spreadsheet = {
-    'name': xls_path,  # Can also be workbook path if it needs to be
-    'sheet': 'Sheet1',  # Can be sheet name or number (non-zero based)
-    'hasColHdg': True,  # Does the spreadsheet have column headings?
-  }
+  return convertSpreadsheet(xls_path, db)
 
-  return convertSpreadsheet(spreadsheet, db)
 
 # Define a class on the fly to assign the data to to make accessing it easier.
 @dataclass
 class XlatedRow:
   """Data class for spreadsheet columns, gives meaningful names in program.
-     Define names for columns so that the object has names that are easy to use."""
+  Define names for columns so that the object has names that are easy to use."""
+
   title: str
   content: str
   tags: list
@@ -87,45 +82,20 @@ class XlatedRow:
     return f'{self.title}'
 
 
-def convertSpreadsheet(spreadsheet: dict, db: TemplateDB | None = None) -> bool:
-  """Code for converting spreadsheet into SQLite3 Database."""
+def convertSpreadsheet(xlsx_path: str, db: TemplateDB | None = None) -> bool:
+  """Read the first worksheet of an .xlsx file and upsert rows into the database."""
   if db is None:
     db = TemplateDB()
 
-  # -- Local variables (work and otherwise)
   templateRows: list[XlatedRow] = []
   seenTitles: set[str] = set()
   duplicateTitles: set[str] = set()
 
-  # Functions to convert column letters to numbers and vice-versa. Using lambda because I like this as an example.
-  #  Converted the functions from sxl to lambda just as an example. moving over to using sxl built ins.
-  #  Leaving this "comment" here to have them documented becasue they're still pretty neat lambda's.
-  # colNum = lambda a: 0 if a == '' else 1 + ord(a[-1]) - ord('A') + 26 * colNum(a[:-1])  # noqa: E731
-  # colName = lambda n: '' if n <= 0 else colName((n - 1) // 26) + chr((n - 1) % 26 + ord('A'))  # noqa: E731
+  LOGGER.info('Reading spreadsheet (first sheet, row 1 skipped as header)...')
+  raw_rows = read_template_rows(xlsx_path)
 
-  # Sheet can be the sheet name or the sheet # (ex: wb.sheets[1]).
-  try:
-    ws = Workbook(spreadsheet['name']).sheets[spreadsheet['sheet']]
-
-  except BadZipFile:
-    LOGGER.error("Corrupted or invalid file selected for import!")
-    raise InvalidImportFileType()
-
-  # Iterate through the spreadsheet building the template table and storing other data needed later.
-  for rownum, row in enumerate(ws.rows):
-
-    # Skip column headings row if we're told about it.
-    if spreadsheet['hasColHdg'] and rownum == 0:
-      LOGGER.info("Skipping column headings from spreadsheet...")
-      continue
-
-    # Build our object from the spreadsheet.
-    # Be sure to subtract one since the column conversion is not zero based.
-    row = XlatedRow(
-      title=row[col2num('A') - 1].strip(),
-      content=row[col2num('B') - 1].strip(),
-      tags=row[col2num('C') - 1].split(',')
-    )
+  for title, content, tag_parts in raw_rows:
+    row = XlatedRow(title=title, content=content, tags=tag_parts)
 
     if row.title in seenTitles:
       duplicateTitles.add(row.title)
@@ -135,7 +105,7 @@ def convertSpreadsheet(spreadsheet: dict, db: TemplateDB | None = None) -> bool:
     templateRows.append(row)
 
   # Log how many rows were in the spreadsheet.
-  LOGGER.info(f"{len(templateRows)} templates loaded from spreadsheet.")
+  LOGGER.info(f'{len(templateRows)} templates loaded from spreadsheet.')
 
   if duplicateTitles:
     duplicateList = ', '.join(sorted(duplicateTitles))
