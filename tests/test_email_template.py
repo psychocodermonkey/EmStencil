@@ -18,7 +18,11 @@ from __future__ import annotations
 
 import pytest
 from emstencil.Dataclasses import EmailTemplate
-from emstencil.Exceptions import TemplateKeyValueMismatch, TemplateKeyValueNull
+from emstencil.Exceptions import (
+  TemplateFieldKindConflict,
+  TemplateKeyValueMismatch,
+  TemplateKeyValueNull,
+)
 
 
 def testEmailTemplateInitParsesPlaceholders() -> None:
@@ -151,3 +155,61 @@ def testExportWrappedPlainIsDetectedAsHtmlForMerge() -> None:
   template.setFields({'name': 'BOB'})
   assert template.fields['name'] == 'bob'
   assert template.replacedText == '<p>Hi bob</p>'
+
+
+def testEmailTemplateImagePlaceholderPlainBodyWrappedAsHtml() -> None:
+  """^{...} in a non-HTML body is wrapped like spreadsheet export so merge treats it as HTML."""
+  template = EmailTemplate('Img', 'Hello ^{Logo} there')
+  assert template.content == '<p>Hello ^{Logo} there</p>'
+  assert list(template.fields.keys()) == ['Logo']
+  assert template.field_kinds == {'Logo': 'image'}
+
+
+def testEmailTemplateFieldKindConflictRaises() -> None:
+  """The same key as ${...} and ^{...} is a template definition error."""
+  with pytest.raises(TemplateFieldKindConflict) as exc_info:
+    EmailTemplate('Bad', 'Hi ${x} and ^{x}')
+  assert exc_info.value.key == 'x'
+
+
+def testEmailTemplateMixedTextAndImagePlaceholders() -> None:
+  """Document order defines field keys; merge uses correct delimiters per kind."""
+  template = EmailTemplate('Mix', '<p>${name} see ^{Shot}</p>')
+  assert list(template.fields.keys()) == ['name', 'Shot']
+  assert template.field_kinds == {'name': 'text', 'Shot': 'image'}
+  template.setFields({'name': 'Pat', 'Shot': 'http://example.com/x.png'})
+  assert template.replacedText == (
+    '<p>pat see <img src="http://example.com/x.png" alt="Shot" /></p>'
+  )
+
+
+def testEmailTemplateReplacedTextReplacesCaretPlaceholders() -> None:
+  template = EmailTemplate('I', '<p>^{A}</p>')
+  template.fields = {'A': '<img src="x" />'}
+  assert template.replacedText == '<p>&lt;img src="x" /&gt;</p>'
+
+
+def testEmailTemplateSetFieldsSkipsCaseRulesForImageKind() -> None:
+  template = EmailTemplate('I', '<p>^{token}</p>')
+  template.setFields({'token': 'AbCd'})
+  assert template.fields['token'] == 'AbCd'
+
+
+def testEmailTemplateDataUrlCaretBecomesImgTag() -> None:
+  """Bare ^{key} with a data URL must merge to <img> so HTML preview shows a picture."""
+  template = EmailTemplate('I', '<p>Hi ^{Pic}</p>')
+  url = 'data:image/png;base64,QUJD'
+  template.setFields({'Pic': url})
+  out = template.replacedText
+  assert '<img ' in out
+  assert 'src="data:image/png;base64,QUJD"' in out
+  assert out.count('data:image/png;base64,QUJD') == 1
+
+
+def testEmailTemplateCaretInsideImgSrcIsUrlOnly() -> None:
+  template = EmailTemplate('I', '<p><img src="^{Pic}" alt="a" /></p>')
+  url = 'data:image/png;base64,QUJD'
+  template.setFields({'Pic': url})
+  out = template.replacedText
+  assert out == '<p><img src="data:image/png;base64,QUJD" alt="a" /></p>'
+  assert out.count('<img') == 1

@@ -17,8 +17,17 @@ from __future__ import annotations
 import html
 import re
 
+from PySide6.QtGui import QTextDocument
+
 # Opening or closing tag with a letter name; avoids treating "<3" or "<!" alone as HTML.
 _TAG_RE = re.compile(r'</?[a-zA-Z][\w:-]*')
+
+_IMG_TAG_RE = re.compile(r'<img\b[^>]*>', re.IGNORECASE)
+# Catches data URLs left in plain text after HTML→text conversion (e.g. from src attributes).
+_STANDALONE_DATA_URL_RE = re.compile(
+  r'data:image/[\w+.-]+;base64,[A-Za-z0-9+/=]+',
+  re.IGNORECASE,
+)
 
 
 def is_html_content(content: str) -> bool:
@@ -45,3 +54,13 @@ def export_content_as_html(content: str) -> str:
     return content
   escaped = html.escape(content, quote=False).replace('\n', '<br/>')
   return f'<p>{escaped}</p>'
+
+
+def clipboard_plain_text_from_merged_html(html: str) -> str:
+  """text/plain for clipboard: keep readable text without embedding data-URL payloads."""
+  without_imgs = _IMG_TAG_RE.sub('\n[Image]\n', html)
+  doc = QTextDocument()
+  doc.setHtml(without_imgs)
+  plain = doc.toPlainText()
+  plain = _STANDALONE_DATA_URL_RE.sub('[Image]', plain)
+  return plain.strip()

@@ -15,7 +15,7 @@
 from __future__ import annotations
 
 from PySide6.QtCore import Qt, QMimeData
-from PySide6.QtGui import QClipboard, QFontMetrics, QKeySequence, QShortcut, QTextDocument
+from PySide6.QtGui import QClipboard, QFontMetrics, QKeySequence, QShortcut
 from PySide6.QtWidgets import (
   QApplication,
   QMessageBox,
@@ -25,7 +25,7 @@ from PySide6.QtWidgets import (
   QMainWindow,
 )
 from PySide6.QtWidgets import QPushButton, QTextEdit, QComboBox
-from .content_html import is_html_content
+from .content_html import clipboard_plain_text_from_merged_html, is_html_content
 from .Database import TemplateDB
 from .FieldEntryDialog import FieldEntryDialog
 from .Dataclasses import EmailTemplate, MetadataTag
@@ -172,18 +172,12 @@ class TemplateSelector(QWidget):
     else:
       self.textArea.setPlainText(body)
 
-  def _plainTextFromHtml(self, html: str) -> str:
-    """Clipboard plain MIME fallback for targets that ignore HTML."""
-    doc = QTextDocument()
-    doc.setHtml(html)
-    return doc.toPlainText()
-
   def _copyRenderedToClipboard(self, tmplt: EmailTemplate, rendered: str) -> None:
     """Copy merged output; HTML templates set both text/html and text/plain."""
     if is_html_content(tmplt.content):
       mime = QMimeData()
       mime.setHtml(rendered)
-      mime.setText(self._plainTextFromHtml(rendered))
+      mime.setText(clipboard_plain_text_from_merged_html(rendered))
       self.clipboard.setMimeData(mime)
 
     else:
