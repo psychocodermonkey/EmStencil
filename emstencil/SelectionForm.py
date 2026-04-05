@@ -14,8 +14,8 @@
 
 from __future__ import annotations
 
-from PySide6.QtCore import Qt
-from PySide6.QtGui import QFontMetrics, QKeySequence, QShortcut, QClipboard
+from PySide6.QtCore import Qt, QMimeData
+from PySide6.QtGui import QClipboard, QFontMetrics, QKeySequence, QShortcut, QTextDocument
 from PySide6.QtWidgets import (
   QApplication,
   QMessageBox,
@@ -25,6 +25,7 @@ from PySide6.QtWidgets import (
   QMainWindow,
 )
 from PySide6.QtWidgets import QPushButton, QTextEdit, QComboBox
+from .content_html import is_html_content
 from .Database import TemplateDB
 from .FieldEntryDialog import FieldEntryDialog
 from .Dataclasses import EmailTemplate, MetadataTag
@@ -65,7 +66,10 @@ class TemplateSelector(QWidget):
     self.textArea.setMinimumHeight(self.textArea.fontMetrics().height() * 15)
     self.textArea.setMinimumWidth(textAreaMetrics.horizontalAdvance('M' * 55))
     self.textArea.setReadOnly(True)
-    self.textArea.setText(self.templateComboBox.currentData().content)
+    self._previewTemplateBody(
+      self.templateComboBox.currentData(),
+      self.templateComboBox.currentData().content,
+    )
     self.layout.addWidget(self.textArea)
 
     # Add buttons to the main layout
@@ -160,10 +164,35 @@ class TemplateSelector(QWidget):
 
     return buttonLayout
 
+  def _previewTemplateBody(self, tmplt: EmailTemplate, body: str) -> None:
+    """Show raw or merged body; HTML templates use rich display."""
+    if is_html_content(tmplt.content):
+      self.textArea.setHtml(body)
+
+    else:
+      self.textArea.setPlainText(body)
+
+  def _plainTextFromHtml(self, html: str) -> str:
+    """Clipboard plain MIME fallback for targets that ignore HTML."""
+    doc = QTextDocument()
+    doc.setHtml(html)
+    return doc.toPlainText()
+
+  def _copyRenderedToClipboard(self, tmplt: EmailTemplate, rendered: str) -> None:
+    """Copy merged output; HTML templates set both text/html and text/plain."""
+    if is_html_content(tmplt.content):
+      mime = QMimeData()
+      mime.setHtml(rendered)
+      mime.setText(self._plainTextFromHtml(rendered))
+      self.clipboard.setMimeData(mime)
+
+    else:
+      self.clipboard.setText(rendered)
+
   def templateComboBoxSelected(self) -> None:
     """Handling the UI update from the template combo box selection changing."""
     selectedEmailTemplate = self.templateComboBox.currentData()
-    self.textArea.setText(selectedEmailTemplate.content)
+    self._previewTemplateBody(selectedEmailTemplate, selectedEmailTemplate.content)
     self.repaint()
 
   def metaTagComboBoxSelected(self) -> None:
@@ -186,7 +215,8 @@ class TemplateSelector(QWidget):
     self.templateComboBox.clear()
     for tmplt in self.templateList:
       self.templateComboBox.addItem(str(tmplt), tmplt)
-    self.textArea.setText(self.templateComboBox.currentData().content)
+    cur = self.templateComboBox.currentData()
+    self._previewTemplateBody(cur, cur.content)
     self.repaint()
 
   def sendUserInfoMessage(self, msg: str) -> None:
@@ -215,7 +245,8 @@ class TemplateSelector(QWidget):
       tmplt.clearFields()
       self.templateComboBox.addItem(str(tmplt), tmplt)
     self.templateComboBox.setCurrentIndex(savedIndex)
-    self.textArea.setText(self.templateComboBox.currentData().content)
+    cur = self.templateComboBox.currentData()
+    self._previewTemplateBody(cur, cur.content)
     self.repaint()
 
   def selectClicked(self) -> None:
@@ -231,9 +262,10 @@ class TemplateSelector(QWidget):
   def updateTextArea(self, tmplt: EmailTemplate) -> None:
     """Upate the text area with the template"""
     if tmplt.fieldsSet:
-      self.textArea.setText(tmplt.replacedText)
+      self._previewTemplateBody(tmplt, tmplt.replacedText)
+
     else:
-      self.textArea.setText(tmplt.content)
+      self._previewTemplateBody(tmplt, tmplt.content)
 
     self.repaint()
 
@@ -241,7 +273,11 @@ class TemplateSelector(QWidget):
     """Copy the text for the selected email template to the clipboard."""
     selectedEmailTemplate = self.templateComboBox.currentData()
     if selectedEmailTemplate.fieldsSet:
-      self.clipboard.setText(selectedEmailTemplate.replacedText)
+      self._copyRenderedToClipboard(
+        selectedEmailTemplate,
+        selectedEmailTemplate.replacedText,
+      )
+
     else:
       LOGGER.info('All values must be entered for template to be copied to clipboard...')
       self.sendUserInfoMessage('You must enter values for all fields in the template.')

@@ -14,9 +14,11 @@
 
 from __future__ import annotations
 
+import html
 import re
 from enum import Enum
 from dataclasses import dataclass, field
+from .content_html import is_html_content
 from .Exceptions import TemplateKeyValueMismatch, TemplateKeyValueNull
 
 
@@ -106,14 +108,16 @@ class EmailTemplate:
   def replacedText(self) -> str:
     """Return modified text based on values from the internal dictionary."""
     value = self.content
+    merge_as_html = is_html_content(self.content)
     for key in self.fields:
       # Build the exact text to match to for replacement so we match the full string for replacement
-      rEx = r'\$\{' + key + r'\}'
+      rEx = r'\$\{' + re.escape(key) + r'\}'
       rExMatch = re.findall(rEx, self.content)
 
       # Replace the matches we found
+      replacement = html.escape(str(self.fields[key]), quote=False) if merge_as_html else self.fields[key]
       for fld in rExMatch:
-        value = value.replace(fld, self.fields[key])
+        value = value.replace(fld, replacement)
 
     return value
 
@@ -135,10 +139,14 @@ class EmailTemplate:
 
     else:
       # Add values, ensuring we add ALL values to the dictionary.
-      # Match case based on the case of the field used in the template.
+      # Case-folding breaks HTML bodies; skip when content is detected as HTML.
+      html_body = is_html_content(self.content)
       for key in values:
         if values[key] is not None:
-          if key.islower():
+          if html_body:
+            self.fields[key] = values[key]
+
+          elif key.islower():
             self.fields[key] = values[key].lower()
 
           elif key.isupper():
