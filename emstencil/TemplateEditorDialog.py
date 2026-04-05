@@ -18,6 +18,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent, QKeySequence, QShortcut
 from PySide6.QtWidgets import QDialog, QLabel, QLineEdit, QTextEdit, QPushButton
 from PySide6.QtWidgets import QHBoxLayout, QVBoxLayout, QMessageBox
+from .content_html import is_html_content, rich_text_editor_html_should_persist_as_html
 from .Database import TemplateDB
 from .Dataclasses import EmailTemplate, MetadataTag
 
@@ -32,6 +33,7 @@ class TemplateEditorDialog(QDialog):
     self.isEditMode = template is not None
     self.hasUnsavedChanges = False
     self.loadingValues = False
+    self._persistBodyAsHtml = False
 
     self.SetupUI()
     self.ConnectSignals()
@@ -58,6 +60,8 @@ class TemplateEditorDialog(QDialog):
 
     templateLabel = QLabel('Template')
     self.templateField = QTextEdit()
+    # Rich paste (e.g. Word tables) requires acceptRichText even for new/plain-backed templates.
+    self.templateField.setAcceptRichText(True)
     layout.addWidget(templateLabel)
     layout.addWidget(self.templateField)
 
@@ -93,11 +97,18 @@ class TemplateEditorDialog(QDialog):
     self.loadingValues = True
 
     if self.isEditMode and self.template is not None:
+      self._persistBodyAsHtml = is_html_content(self.template.content)
       self.titleField.setText(self.template.title)
-      self.templateField.setPlainText(self.template.content)
+      if self._persistBodyAsHtml:
+        self.templateField.setHtml(self.template.content)
+
+      else:
+        self.templateField.setPlainText(self.template.content)
+
       self.tagsField.setText(', '.join(tag.tag for tag in self.template.metadata))
 
     else:
+      self._persistBodyAsHtml = False
       self.titleField.clear()
       self.tagsField.clear()
       self.templateField.clear()
@@ -114,7 +125,16 @@ class TemplateEditorDialog(QDialog):
   def BuildTemplateFromFields(self) -> EmailTemplate:
     """Create template object from dialog fields."""
     title = self.titleField.text()
-    content = self.templateField.toPlainText()
+    if self._persistBodyAsHtml:
+      content = self.templateField.toHtml()
+
+    else:
+      html_snapshot = self.templateField.toHtml()
+      content = (
+        html_snapshot
+        if rich_text_editor_html_should_persist_as_html(html_snapshot)
+        else self.templateField.toPlainText()
+      )
     tags = self.tagsField.text().split(',')
     metadata = [MetadataTag(tag) for tag in tags if tag != '']
 

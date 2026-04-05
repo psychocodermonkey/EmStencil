@@ -14,8 +14,12 @@
 
 from __future__ import annotations
 
-from PySide6.QtCore import Qt
-from PySide6.QtGui import QFontMetrics, QKeySequence, QShortcut, QClipboard
+import base64
+import binascii
+import re
+
+from PySide6.QtCore import Qt, QMimeData
+from PySide6.QtGui import QClipboard, QFontMetrics, QImage, QKeySequence, QResizeEvent, QShortcut
 from PySide6.QtWidgets import (
   QApplication,
   QMessageBox,
@@ -24,7 +28,8 @@ from PySide6.QtWidgets import (
   QVBoxLayout,
   QMainWindow,
 )
-from PySide6.QtWidgets import QLabel, QPushButton, QTextEdit, QComboBox
+from PySide6.QtWidgets import QPushButton, QTextEdit, QComboBox
+from .content_html import clipboard_plain_text_from_merged_html, is_html_content
 from .Database import TemplateDB
 from .FieldEntryDialog import FieldEntryDialog
 from .Dataclasses import EmailTemplate, MetadataTag
@@ -34,10 +39,13 @@ from .Logging import LOGGER
 class TemplateSelector(QWidget):
   """Class for main window for selecting and working with templates."""
 
+  _IMG_TAG_RE = re.compile(r'<img\b([^>]*)>', re.IGNORECASE)
+  _SRC_ATTR_RE = re.compile(r'''src\s*=\s*(["'])(.*?)\1''', re.IGNORECASE | re.DOTALL)
+  _DIM_ATTR_RE = re.compile(r'''\s(?:width|height)\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)''', re.IGNORECASE)
+
   def __init__(self, templateList: list, metaTags: list, parent=None) -> None:
     super(TemplateSelector, self).__init__()
     # Work fields and local variables for the main application.
-    fontPointSize: int = QLabel().font().pointSize()
     self.templateList: list[EmailTemplate] = templateList
     self.metaTags: list[MetadataTag] = metaTags
     self.clipboard: QClipboard = QApplication.clipboard()
@@ -62,10 +70,14 @@ class TemplateSelector(QWidget):
 
     # Add the text edit area to the main form
     self.textArea = QTextEdit()
+    textAreaMetrics = QFontMetrics(self.textArea.font())
     self.textArea.setMinimumHeight(self.textArea.fontMetrics().height() * 15)
-    self.textArea.setMinimumWidth(fontPointSize * 55)
+    self.textArea.setMinimumWidth(textAreaMetrics.horizontalAdvance('M' * 55))
     self.textArea.setReadOnly(True)
-    self.textArea.setText(self.templateComboBox.currentData().content)
+    self._previewTemplateBody(
+      self.templateComboBox.currentData(),
+      self.templateComboBox.currentData().content,
+    )
     self.layout.addWidget(self.textArea)
 
     # Add buttons to the main layout
@@ -74,7 +86,6 @@ class TemplateSelector(QWidget):
 
   def buildTemplateSelectGroup(self) -> None:
     """Build the boxes to filter out and select what template to work with."""
-    fontPointSize: int = QLabel().font().pointSize()
     self.templateSelectionGroup = QHBoxLayout()
 
     # Build layouts to be nexted in this group to allow differing alignment.
@@ -99,7 +110,8 @@ class TemplateSelector(QWidget):
 
     # Add the refresh button to it's won layout so it can be right aligned on the form.
     refreshButton = QPushButton('Reset')
-    refreshButton.setMaximumWidth(fontPointSize * 8 + 10)
+    refreshMetrics = QFontMetrics(refreshButton.font())
+    refreshButton.setMaximumWidth(refreshMetrics.horizontalAdvance('Reset') + 26)
     refreshButton.clicked.connect(self.resetTemplates)
     self.refreshShortcut = QShortcut(QKeySequence('Esc'), self)
     self.refreshShortcut.activated.connect(self.resetTemplates)
@@ -123,22 +135,21 @@ class TemplateSelector(QWidget):
       if stringWidth > minWidth:
         minWidth: int = stringWidth
       comboBox.addItem(str(item), item)
-    comboBox.setFixedWidth(int(minWidth * 1.5))
+    comboBoxWidth = int(minWidth * 1.35) + 28
+    comboBox.setMinimumWidth(comboBoxWidth)
 
     return comboBox
 
   def buildButtons(self) -> QHBoxLayout:
     """Build the button layout to be added to the form."""
-    # Calculate what the minimum width needs to be in pixels for all 3 buttons.
-    fontPointSize = QLabel().font().pointSize()
-    minWidth = (fontPointSize * 6) + 20
-
     # Initilize the layout for the buttons.
     buttonLayout = QHBoxLayout()
     buttonLayout.setAlignment(Qt.AlignmentFlag.AlignRight)
 
     # Define the select button and add it to the button layout.
     selectButton = QPushButton('Select')
+    buttonMetrics = QFontMetrics(selectButton.font())
+    minWidth = buttonMetrics.horizontalAdvance('Select')
     selectButton.setMinimumWidth(minWidth)
     selectButton.setMaximumWidth(minWidth * 2)
     selectButton.setDefault(True)  # Setting this even thougn it doesn't work outside of a dialog
@@ -161,10 +172,80 @@ class TemplateSelector(QWidget):
 
     return buttonLayout
 
+  def _previewTemplateBody(self, tmplt: EmailTemplate, body: str) -> None:
+    """Show raw or merged body; HTML templates use rich display."""
+    if is_html_content(tmplt.content):
+      self.textArea.setHtml(self._boundPreviewImageWidth(body))
+
+    else:
+      self.textArea.setPlainText(body)
+
+  def _boundPreviewImageWidth(self, htmlBody: str) -> str:
+    """Bound pasted data-URL images to viewport width while preserving aspect ratio."""
+    maxWidth = self._previewImageMaxWidth()
+
+    def updateTag(match: re.Match[str]) -> str:
+      attrs = match.group(1)
+      srcMatch = self._SRC_ATTR_RE.search(attrs)
+      if srcMatch is None:
+        return match.group(0)
+      imageWidth = self._dataUrlImageWidth(srcMatch.group(2))
+      if imageWidth is None or imageWidth <= maxWidth:
+        return match.group(0)
+      newAttrs = self._DIM_ATTR_RE.sub('', attrs).rstrip()
+      selfClose = ''
+      if re.search(r'/\s*$', newAttrs):
+        newAttrs = re.sub(r'/\s*$', '', newAttrs).rstrip()
+        selfClose = ' /'
+      return f'<img{newAttrs} width="{maxWidth}"{selfClose}>'
+
+    return self._IMG_TAG_RE.sub(updateTag, htmlBody)
+
+  def _previewImageMaxWidth(self) -> int:
+    """Maximum image width for the current text viewport."""
+    return max(80, self.textArea.viewport().width() - 24)
+
+  def _dataUrlImageWidth(self, src: str) -> int | None:
+    """Return decoded width for data:image URLs; None when unavailable."""
+    v = src.strip()
+    if not v.startswith('data:image/'):
+      return None
+    try:
+      comma = v.index(',')
+      raw = base64.b64decode(v[comma + 1 :], validate=False)
+    except (ValueError, binascii.Error):
+      return None
+    image = QImage.fromData(raw)
+    if image.isNull():
+      return None
+    return image.width()
+
+  def resizeEvent(self, event: QResizeEvent) -> None:
+    """Reflow preview HTML so bounded image widths track window size."""
+    super().resizeEvent(event)
+    if not hasattr(self, 'templateComboBox'):
+      return
+    tmplt = self.templateComboBox.currentData()
+    if tmplt is None:
+      return
+    body = tmplt.replacedText if tmplt.fieldsSet else tmplt.content
+    self._previewTemplateBody(tmplt, body)
+
+  def _copyRenderedToClipboard(self, tmplt: EmailTemplate, rendered: str) -> None:
+    """Copy merged output; HTML templates set both text/html and text/plain."""
+    if is_html_content(tmplt.content):
+      mime = QMimeData()
+      mime.setHtml(rendered)
+      mime.setText(clipboard_plain_text_from_merged_html(rendered))
+      self.clipboard.setMimeData(mime)
+
+    else:
+      self.clipboard.setText(rendered)
+
   def templateComboBoxSelected(self) -> None:
     """Handling the UI update from the template combo box selection changing."""
     selectedEmailTemplate = self.templateComboBox.currentData()
-    self.textArea.setText(selectedEmailTemplate.content)
+    self._previewTemplateBody(selectedEmailTemplate, selectedEmailTemplate.content)
     self.repaint()
 
   def metaTagComboBoxSelected(self) -> None:
@@ -187,7 +268,8 @@ class TemplateSelector(QWidget):
     self.templateComboBox.clear()
     for tmplt in self.templateList:
       self.templateComboBox.addItem(str(tmplt), tmplt)
-    self.textArea.setText(self.templateComboBox.currentData().content)
+    cur = self.templateComboBox.currentData()
+    self._previewTemplateBody(cur, cur.content)
     self.repaint()
 
   def sendUserInfoMessage(self, msg: str) -> None:
@@ -216,7 +298,8 @@ class TemplateSelector(QWidget):
       tmplt.clearFields()
       self.templateComboBox.addItem(str(tmplt), tmplt)
     self.templateComboBox.setCurrentIndex(savedIndex)
-    self.textArea.setText(self.templateComboBox.currentData().content)
+    cur = self.templateComboBox.currentData()
+    self._previewTemplateBody(cur, cur.content)
     self.repaint()
 
   def selectClicked(self) -> None:
@@ -232,9 +315,10 @@ class TemplateSelector(QWidget):
   def updateTextArea(self, tmplt: EmailTemplate) -> None:
     """Upate the text area with the template"""
     if tmplt.fieldsSet:
-      self.textArea.setText(tmplt.replacedText)
+      self._previewTemplateBody(tmplt, tmplt.replacedText)
+
     else:
-      self.textArea.setText(tmplt.content)
+      self._previewTemplateBody(tmplt, tmplt.content)
 
     self.repaint()
 
@@ -242,7 +326,11 @@ class TemplateSelector(QWidget):
     """Copy the text for the selected email template to the clipboard."""
     selectedEmailTemplate = self.templateComboBox.currentData()
     if selectedEmailTemplate.fieldsSet:
-      self.clipboard.setText(selectedEmailTemplate.replacedText)
+      self._copyRenderedToClipboard(
+        selectedEmailTemplate,
+        selectedEmailTemplate.replacedText,
+      )
+
     else:
       LOGGER.info('All values must be entered for template to be copied to clipboard...')
       self.sendUserInfoMessage('You must enter values for all fields in the template.')
@@ -255,3 +343,4 @@ class TemplateSelector(QWidget):
     """Close the form/application by triggering close from the parent."""
     LOGGER.info('Application close...')
     self.parent.closeWindow()
+  _PREVIEW_IMAGE_STYLE = 'max-width: 100%; height: auto;'

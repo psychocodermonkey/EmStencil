@@ -18,6 +18,7 @@ from zipfile import BadZipFile
 from openpyxl import Workbook
 from openpyxl import load_workbook
 from openpyxl.utils.exceptions import InvalidFileException
+from .content_html import export_content_as_html
 from .Exceptions import InvalidImportFileType
 
 
@@ -62,10 +63,10 @@ def read_template_rows(path: str) -> list[tuple[str, str, list[str]]]:
 
 
 def write_templates_workbook(path: str, rows: list[tuple[str, str, str]]) -> None:
-  """Write a new workbook with one sheet: header row plus title, content, tags (comma-separated)."""
+  """Write a new workbook; Content column is always HTML (plain bodies wrapped on export)."""
   wb = Workbook()
   ws = wb.active
   ws.append(list(EXPORT_HEADERS))
   for title, content, tags_csv in rows:
-    ws.append([title, content, tags_csv])
+    ws.append([title, export_content_as_html(content), tags_csv])
   wb.save(path)

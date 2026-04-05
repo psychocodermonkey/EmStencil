@@ -38,6 +38,19 @@ class TemplateKeyValueNull(Exception):
     super().__init__(self.message)
 
 
+class TemplateFieldKindConflict(Exception):
+  """Same field name used as ${...} and ^{...} (or other kinds) in one template body."""
+
+  def __init__(self, key: str, existing_kind: str, conflicting_kind: str) -> None:
+    self.key = key
+    self.existing_kind = existing_kind
+    self.conflicting_kind = conflicting_kind
+    self.message = (
+      f'Field {key!r} is declared as both {existing_kind} and {conflicting_kind} placeholders.'
+    )
+    super().__init__(self.message)
+
+
 class AccessNullRowID(Exception):
   """
   ## Exception for when rowID expected and it is null

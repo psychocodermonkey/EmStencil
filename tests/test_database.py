@@ -17,34 +17,8 @@
 from __future__ import annotations
 
 import pytest
-import sqlite3
-from pathlib import Path
 from emstencil.Database import TemplateDB
-import emstencil.Database as databaseModule
 from emstencil.Dataclasses import EmailTemplate, MetadataTag, State
-from typing import Iterator
-
-
-@pytest.fixture()
-def templateDB(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[TemplateDB]:
-  """Return isolated database instance with schema loaded."""
-  dbPath = tmp_path / 'templates.db'
-  schemaPath = Path(__file__).resolve().parents[1] / 'emstencil' / 'templates.sql'
-  schemaText = schemaPath.read_text(encoding='utf-8')
-
-  # Build a fresh schema for each test so state cannot leak between tests.
-  with sqlite3.connect(dbPath) as setupDB:
-    setupDB.executescript(schemaText)
-
-  # Reset singleton and point the DB module to the per-test database file.
-  TemplateDB._instance = None
-  monkeypatch.setattr(databaseModule, 'DATABASE_FILE', dbPath)
-
-  db = TemplateDB()
-  yield db
-
-  db.close()
-  TemplateDB._instance = None
 
 
 def testDatabaseAddTemplatePersistsAndSetsState(templateDB: TemplateDB) -> None:

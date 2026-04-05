@@ -14,16 +14,75 @@
 
 from __future__ import annotations
 
+import html
 import re
 from enum import Enum
 from dataclasses import dataclass, field
-from .Exceptions import TemplateKeyValueMismatch, TemplateKeyValueNull
+from .content_html import export_content_as_html, is_html_content
+from .Exceptions import (
+  TemplateFieldKindConflict,
+  TemplateKeyValueMismatch,
+  TemplateKeyValueNull,
+)
 
 
 class State(Enum):
   """State enum for use in dataclass objects to denote state."""
 
   ADDED, UPDATED, DELETED, EXISTING = range(0, 4)
+
+
+# ${text field} and ^{image field}; first match group is text inner, second is image inner.
+_PLACEHOLDER_RE = re.compile(r'\$\{(.*?)\}|\^\{(.*?)\}')
+
+
+def _content_has_image_placeholder(content: str) -> bool:
+  """True if body uses ^{...} image slots (requires HTML body for merge/export)."""
+  return '^{' in content
+
+
+def _parse_placeholder_specs(content: str) -> tuple[list[str], dict[str, str]]:
+  """First-seen key order; kinds are 'text' or 'image'. Raises TemplateFieldKindConflict on clash."""
+  order: list[str] = []
+  kinds: dict[str, str] = {}
+  for m in _PLACEHOLDER_RE.finditer(content):
+    text_key, image_key = m.group(1), m.group(2)
+    if text_key is not None:
+      key, kind = text_key, 'text'
+    else:
+      key, kind = image_key, 'image'
+    if key in kinds:
+      if kinds[key] != kind:
+        raise TemplateFieldKindConflict(key, kinds[key], kind)
+      continue
+    kinds[key] = kind
+    order.append(key)
+  return order, kinds
+
+
+_SRC_EQ_DOUBLE = re.compile(r'src\s*=\s*"\s*$', re.IGNORECASE)
+_SRC_EQ_SINGLE = re.compile(r"src\s*=\s*'\s*$", re.IGNORECASE)
+
+
+def _html_merge_caret_image_field(body: str, key: str, raw) -> str:
+  """Bare ^{key} → <img src=...>; inside src=\"^{key}\" → URL only so tags stay valid."""
+  val = str(raw).strip()
+  safe_url = html.escape(val, quote=True)
+  alt = html.escape(key, quote=True)
+  full_img = f'<img src="{safe_url}" alt="{alt}" />'
+  pat = re.compile(r'\^\{' + re.escape(key) + r'\}')
+  chunks: list[str] = []
+  pos = 0
+  for m in pat.finditer(body):
+    chunks.append(body[pos : m.start()])
+    prefix = body[: m.start()]
+    if _SRC_EQ_DOUBLE.search(prefix) or _SRC_EQ_SINGLE.search(prefix):
+      chunks.append(safe_url)
+    else:
+      chunks.append(full_img)
+    pos = m.end()
+  chunks.append(body[pos:])
+  return ''.join(chunks)
 
 
 @dataclass(slots=True, order=True)
@@ -62,9 +121,10 @@ class EmailTemplate:
     - Case for stored data to replace in the fields is matched based on case of the text of the field.
   ## Properties
     - title :: Description for the template. Displayed when converted/represented as a string.
-    - content :: The content of the email, contains fields to be replaced represented by ${field text}.
+    - content :: The content of the email; placeholders are ${field} (text) or ^{field} (image).
     - fields :: Calculated dictionary of the fields. Store data to replace for each field as the
                 value for the dict.
+    - field_kinds :: Maps each field key to 'text' or 'image' (from placeholder syntax).
     - metadata :: List of either values or Metadata objects for content tags of the email
         - Using the Metadata object allows for tracking of metadata row ID's in their respective tables.
     - rowID :: RowID for this template in the table. Not set as part of init,
@@ -88,15 +148,18 @@ class EmailTemplate:
   title: str
   content: str
   fields: dict = field(default_factory=dict, init=False, repr=False)
+  field_kinds: dict[str, str] = field(default_factory=dict, init=False, repr=False)
   metadata: list[MetadataTag] = field(default_factory=list, repr=False)
   rowID: int = field(init=False, default=0)
   state: State = field(init=False, default=State.ADDED)
 
   def __post_init__(self) -> None:
     """Post initilization build internal requirements for template object."""
-    # RegEx to match fields in the ${field} format, grabbing only the text
-    wkFields = re.findall(r'\$\{(.*?)\}', self.content)
-    self.fields = dict(zip(wkFields, [None] * len(wkFields), strict=True))
+    if _content_has_image_placeholder(self.content) and not is_html_content(self.content):
+      self.content = export_content_as_html(self.content)
+    order, kinds = _parse_placeholder_specs(self.content)
+    self.field_kinds = kinds
+    self.fields = {k: None for k in order}
 
   def __str__(self) -> str:
     """User friendly string representation. (user)"""
@@ -106,14 +169,20 @@ class EmailTemplate:
   def replacedText(self) -> str:
     """Return modified text based on values from the internal dictionary."""
     value = self.content
+    merge_as_html = is_html_content(self.content)
     for key in self.fields:
-      # Build the exact text to match to for replacement so we match the full string for replacement
-      rEx = r'\$\{' + key + r'\}'
+      fld_val = self.fields[key]
+      if merge_as_html and self.field_kinds.get(key) == 'image' and fld_val is not None:
+        v = str(fld_val).strip()
+        if v.startswith('data:image/') or v.startswith('http://') or v.startswith('https://'):
+          value = _html_merge_caret_image_field(value, key, fld_val)
+          continue
+      delim = r'\$\{' if self.field_kinds.get(key) == 'text' else r'\^\{'
+      rEx = delim + re.escape(key) + r'\}'
       rExMatch = re.findall(rEx, self.content)
-
-      # Replace the matches we found
+      replacement = html.escape(str(fld_val), quote=False) if merge_as_html else fld_val
       for fld in rExMatch:
-        value = value.replace(fld, self.fields[key])
+        value = value.replace(fld, replacement)
 
     return value
 
@@ -135,20 +204,23 @@ class EmailTemplate:
 
     else:
       # Add values, ensuring we add ALL values to the dictionary.
-      # Match case based on the case of the field used in the template.
+      # Field dialog supplies plain text; match case to placeholder spelling even for HTML bodies.
       for key in values:
         if values[key] is not None:
-          if key.islower():
-            self.fields[key] = values[key].lower()
+          raw = values[key]
+          if self.field_kinds.get(key) == 'image':
+            self.fields[key] = raw
+          elif key.islower():
+            self.fields[key] = raw.lower()
 
           elif key.isupper():
-            self.fields[key] = values[key].upper()
+            self.fields[key] = raw.upper()
 
           elif key.istitle():
-            self.fields[key] = values[key].title()
+            self.fields[key] = raw.title()
 
           else:
-            self.fields[key] = values[key]
+            self.fields[key] = raw
 
         # Throw exception for NULL values for keys.
         else:
