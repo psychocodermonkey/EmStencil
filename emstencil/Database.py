@@ -101,7 +101,7 @@ class TemplateDB:
   def FetchMetadataForTemplate(self, tmplt: emClasses.EmailTemplate) -> emClasses.EmailTemplate:
     """Get all metadata tags associated with template."""
     # Template passed must have a rowID in order to know get tags from the DB.
-    if tmplt.rowID is None:
+    if tmplt.rowID is None or tmplt.rowID == 0:
       raise AccessNullRowID()
 
     # Run query to get tags associated with the given template.
@@ -272,7 +272,7 @@ class TemplateDB:
       return template.rowID
 
     row: tuple[int, str, str] | None = self._FetchTemplateRowByTitle(template.title)
-    if row is None:
+    if row is None or row[0] == 0:
       raise AccessNullRowID()
 
     template.rowID = row[0]
