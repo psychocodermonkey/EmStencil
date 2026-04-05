@@ -105,4 +105,17 @@ def testEmailTemplateSetFieldsRejectsBadInput() -> None:
   # Unset internal fields are treated as null-like and rejected.
   nullLikeTemplate = EmailTemplate('Null', 'Hi ${name}.')
   with pytest.raises(TemplateKeyValueNull):
-    nullLikeTemplate.setFields({'name': 'Alex'})
+    nullLikeTemplate.setFields({'name': None})
+
+
+def testEmailTemplateSetFieldsAcceptsInitialValuesFromNone() -> None:
+  """Checklist #3a: EmailTemplate.setFields accepts first-time values and sets fields."""
+  # Arrange: parsed placeholders start as None before user input is applied.
+  template = EmailTemplate('Case Match', 'Hi ${name}, ${TEAM}, ${Title}.')
+
+  # Act
+  template.setFields({'name': 'ALEx', 'TEAM': 'alpha', 'Title': 'mY task'})
+
+  # Assert: values are stored and case-transformed based on placeholder key casing.
+  assert template.fields == {'name': 'alex', 'TEAM': 'ALPHA', 'Title': 'My Task'}
+  assert template.fieldsSet is True
