@@ -139,14 +139,10 @@ class EmailTemplate:
 
     else:
       # Add values, ensuring we add ALL values to the dictionary.
-      # Case-folding breaks HTML bodies; skip when content is detected as HTML.
-      html_body = is_html_content(self.content)
+      # Field dialog supplies plain text; match case to placeholder spelling even for HTML bodies.
       for key in values:
         if values[key] is not None:
-          if html_body:
-            self.fields[key] = values[key]
-
-          elif key.islower():
+          if key.islower():
             self.fields[key] = values[key].lower()
 
           elif key.isupper():
