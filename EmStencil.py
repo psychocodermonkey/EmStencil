@@ -13,7 +13,6 @@
 ........1.........2.........3.........4.........5.........6.........7.........8.........9.........0.........1.........2.........3..
 """
 
-# TODO: Implement update of templates instead of relying on reconverting from spreadsheet.
 # TODO: Need to handle if/when a meta tag exists in the database list but is not attached to any templates.
 
 import sys
