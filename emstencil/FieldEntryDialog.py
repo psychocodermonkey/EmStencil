@@ -15,6 +15,7 @@
 from __future__ import annotations
 
 from PySide6.QtCore import Qt
+from PySide6.QtGui import QFontMetrics
 from PySide6.QtWidgets import (
   QDialog,
   QHBoxLayout,
@@ -45,11 +46,18 @@ class FieldEntryDialog(QDialog):
     def clamp(n, minn, maxn):
       return max(min(maxn, n), minn)
 
-    fontPointSize: int = QLabel().font().pointSize()
-    minLengthForKeys: int = clamp(max(len(k) for k in self.dictionary), 5, 50) * fontPointSize
-    minLengthForData: int = (
-      clamp(max(len(k) for k in self.dictionary), 15, 120) * fontPointSize
-    ) + 10
+    keyLength = clamp(max(len(key) for key in self.dictionary), 5, 50)
+    valueLength = clamp(
+      max(
+        len(str(key)) if value is None else max(len(str(key)), len(str(value)))
+        for key, value in self.dictionary.items()
+      ),
+      15,
+      120,
+    )
+    metrics = QFontMetrics(QLineEdit().font())
+    minLengthForKeys = metrics.horizontalAdvance('M' * keyLength)
+    minLengthForData = metrics.horizontalAdvance('M' * valueLength)
 
     # Build the dialog on the fly for the keys in the database.
     for key, value in self.dictionary.items():
@@ -62,9 +70,9 @@ class FieldEntryDialog(QDialog):
 
       # Build line edit, set it's size to our scale, bring in text if it is present.
       txtInputFld = QLineEdit()
-      txtInputFld.setFixedWidth(minLengthForData)
+      txtInputFld.setMinimumWidth(minLengthForData)
       if value:
-        txtInputFld.setText(value)
+        txtInputFld.setText(str(value))
 
       else:
         txtInputFld.setText('')

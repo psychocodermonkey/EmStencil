@@ -24,7 +24,7 @@ from PySide6.QtWidgets import (
   QVBoxLayout,
   QMainWindow,
 )
-from PySide6.QtWidgets import QLabel, QPushButton, QTextEdit, QComboBox
+from PySide6.QtWidgets import QPushButton, QTextEdit, QComboBox
 from .Database import TemplateDB
 from .FieldEntryDialog import FieldEntryDialog
 from .Dataclasses import EmailTemplate, MetadataTag
@@ -37,7 +37,6 @@ class TemplateSelector(QWidget):
   def __init__(self, templateList: list, metaTags: list, parent=None) -> None:
     super(TemplateSelector, self).__init__()
     # Work fields and local variables for the main application.
-    fontPointSize: int = QLabel().font().pointSize()
     self.templateList: list[EmailTemplate] = templateList
     self.metaTags: list[MetadataTag] = metaTags
     self.clipboard: QClipboard = QApplication.clipboard()
@@ -62,8 +61,9 @@ class TemplateSelector(QWidget):
 
     # Add the text edit area to the main form
     self.textArea = QTextEdit()
+    textAreaMetrics = QFontMetrics(self.textArea.font())
     self.textArea.setMinimumHeight(self.textArea.fontMetrics().height() * 15)
-    self.textArea.setMinimumWidth(fontPointSize * 55)
+    self.textArea.setMinimumWidth(textAreaMetrics.horizontalAdvance('M' * 55))
     self.textArea.setReadOnly(True)
     self.textArea.setText(self.templateComboBox.currentData().content)
     self.layout.addWidget(self.textArea)
@@ -74,7 +74,6 @@ class TemplateSelector(QWidget):
 
   def buildTemplateSelectGroup(self) -> None:
     """Build the boxes to filter out and select what template to work with."""
-    fontPointSize: int = QLabel().font().pointSize()
     self.templateSelectionGroup = QHBoxLayout()
 
     # Build layouts to be nexted in this group to allow differing alignment.
@@ -99,7 +98,8 @@ class TemplateSelector(QWidget):
 
     # Add the refresh button to it's won layout so it can be right aligned on the form.
     refreshButton = QPushButton('Reset')
-    refreshButton.setMaximumWidth(fontPointSize * 8 + 10)
+    refreshMetrics = QFontMetrics(refreshButton.font())
+    refreshButton.setMaximumWidth(refreshMetrics.horizontalAdvance('Reset') + 26)
     refreshButton.clicked.connect(self.resetTemplates)
     self.refreshShortcut = QShortcut(QKeySequence('Esc'), self)
     self.refreshShortcut.activated.connect(self.resetTemplates)
@@ -123,22 +123,21 @@ class TemplateSelector(QWidget):
       if stringWidth > minWidth:
         minWidth: int = stringWidth
       comboBox.addItem(str(item), item)
-    comboBox.setFixedWidth(int(minWidth * 1.5))
+    comboBoxWidth = int(minWidth * 1.35) + 28
+    comboBox.setMinimumWidth(comboBoxWidth)
 
     return comboBox
 
   def buildButtons(self) -> QHBoxLayout:
     """Build the button layout to be added to the form."""
-    # Calculate what the minimum width needs to be in pixels for all 3 buttons.
-    fontPointSize = QLabel().font().pointSize()
-    minWidth = (fontPointSize * 6) + 20
-
     # Initilize the layout for the buttons.
     buttonLayout = QHBoxLayout()
     buttonLayout.setAlignment(Qt.AlignmentFlag.AlignRight)
 
     # Define the select button and add it to the button layout.
     selectButton = QPushButton('Select')
+    buttonMetrics = QFontMetrics(selectButton.font())
+    minWidth = buttonMetrics.horizontalAdvance('Select')
     selectButton.setMinimumWidth(minWidth)
     selectButton.setMaximumWidth(minWidth * 2)
     selectButton.setDefault(True)  # Setting this even thougn it doesn't work outside of a dialog

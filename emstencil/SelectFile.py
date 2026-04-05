@@ -15,6 +15,7 @@
 
 from __future__ import annotations
 
+from PySide6.QtGui import QFontMetrics
 from PySide6.QtWidgets import QDialog, QFileDialog, QVBoxLayout, QHBoxLayout
 from PySide6.QtWidgets import QPushButton, QLabel, QLineEdit
 
@@ -25,14 +26,12 @@ class FileSelectionDialog(QDialog):
     self.setWindowTitle('Select a File')
     self.selected_file = None
 
-    # Calculate a "good" side for minimum data entry lines.
-    fontPointSize = QLabel().font().pointSize()
-    minLengthForData = 35 * fontPointSize + 20
-
     # Widgets
     self.label = QLabel('Choose a file to import:')
     self.path_display = QLineEdit()
-    self.path_display.setFixedWidth(minLengthForData)  # Enforce a good size for the path.
+    pathMetrics = QFontMetrics(self.path_display.font())
+    minLengthForData = pathMetrics.horizontalAdvance('M' * 35)
+    self.path_display.setMinimumWidth(minLengthForData)  # Enforce a good size for the path.
     self.path_display.setReadOnly(True)
 
     self.btn_browse = QPushButton('Browse...')
