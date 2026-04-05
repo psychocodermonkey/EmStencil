@@ -119,3 +119,28 @@ def testEmailTemplateSetFieldsAcceptsInitialValuesFromNone() -> None:
   # Assert: values are stored and case-transformed based on placeholder key casing.
   assert template.fields == {'name': 'alex', 'TEAM': 'ALPHA', 'Title': 'My Task'}
   assert template.fieldsSet is True
+
+
+def testEmailTemplateSetFieldsSkipsCaseFoldForHtmlBody() -> None:
+  """HTML templates preserve field values exactly (case folding corrupts markup)."""
+  template = EmailTemplate('H', '<p>Hi ${name}</p>')
+  template.setFields({'name': 'ALEx'})
+  assert template.fields == {'name': 'ALEx'}
+
+
+def testEmailTemplateReplacedTextEscapesValuesInHtmlBody() -> None:
+  """Merged values are HTML-escaped when the template body is HTML."""
+  template = EmailTemplate('H', '<td>${cell}</td>')
+  template.fields = {'cell': 'a < b & c'}
+  assert template.replacedText == '<td>a &lt; b &amp; c</td>'
+
+
+def testExportWrappedPlainIsDetectedAsHtmlForMerge() -> None:
+  """After export-style wrapping, body is HTML: escaping and no case-fold apply."""
+  from emstencil.content_html import export_content_as_html
+
+  wrapped = export_content_as_html('Hi ${name}')
+  template = EmailTemplate('T', wrapped)
+  template.setFields({'name': 'BOB'})
+  assert template.fields['name'] == 'BOB'
+  assert template.replacedText == '<p>Hi BOB</p>'
