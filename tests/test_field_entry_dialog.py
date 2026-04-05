@@ -16,6 +16,7 @@
 
 from __future__ import annotations
 
+import base64
 import sys
 
 import pytest
@@ -38,8 +39,11 @@ def test_qimage_to_png_data_url_non_empty(qapp: QApplication) -> None:
   img = QImage(6, 6, QImage.Format.Format_RGB32)
   img.fill(0x00AAFF)
   url = qimage_to_png_data_url(img)
-  assert url.startswith('data:image/png;base64,')
-  assert len(url) > 40
+  prefix = 'data:image/png;base64,'
+  assert url.startswith(prefix)
+  encoded = url.removeprefix(prefix)
+  pngBytes = base64.b64decode(encoded, validate=True)
+  assert pngBytes.startswith(b'\x89PNG\r\n\x1a\n')
 
 
 def test_qimage_to_png_data_url_null_is_empty(qapp: QApplication) -> None:

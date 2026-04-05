@@ -23,6 +23,7 @@ import pytest
 from PySide6.QtWidgets import QApplication
 
 from emstencil.Dataclasses import EmailTemplate
+from emstencil.content_html import is_html_content
 
 
 @pytest.fixture
@@ -58,9 +59,11 @@ def testEditorHtmlTemplateUsesHtmlPersist(qapp: QApplication, mock_db: None) -> 
   dlg = TemplateEditorDialog(EmailTemplate('T', body))
   assert dlg._persistBodyAsHtml is True
   assert dlg.templateField.acceptRichText() is True
+  expected = dlg.templateField.toHtml()
   out = dlg.BuildTemplateFromFields().content
+  assert out == expected
   assert '${name}' in out
-  assert '<' in out
+  assert is_html_content(out) is True
 
 
 def testEditorNewTemplateIsPlainPersist(qapp: QApplication, mock_db: None) -> None:

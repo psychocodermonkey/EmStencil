@@ -48,16 +48,16 @@ def testIsHtmlContentTrueForTableAndParagraphFragments() -> None:
   assert is_html_content('  <p>Hi ${name}</p>') is True
 
 
-def testExportContentAsHtmlLeavesHtmlUnchanged() -> None:
+def testHtmlHelperExportContentAsHtmlLeavesHtmlUnchanged() -> None:
   body = '<p>a & b</p>'
   assert export_content_as_html(body) == body
 
 
-def testExportContentAsHtmlWrapsPlainWithEscaping() -> None:
+def testHtmlHelperExportContentAsHtmlWrapsPlainWithEscaping() -> None:
   assert export_content_as_html('a & b') == '<p>a &amp; b</p>'
 
 
-def testExportContentAsHtmlNewlinesBecomeBr() -> None:
+def testHtmlHelperExportContentAsHtmlConvertsNewlinesToBr() -> None:
   assert export_content_as_html('line1\nline2') == '<p>line1<br/>line2</p>'
 
 

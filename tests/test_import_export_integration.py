@@ -25,7 +25,7 @@ from emstencil.content_html import is_html_content
 from emstencil.Database import TemplateDB
 from emstencil.Dataclasses import EmailTemplate, MetadataTag
 from emstencil.ImportTemplates import convertSpreadsheet
-from emstencil.spreadsheet import EXPORT_HEADERS, read_template_rows, write_templates_workbook
+from emstencil.spreadsheet import EXPORT_HEADERS, write_templates_workbook
 
 
 def _content_for_title(templateDB: TemplateDB, title: str) -> str:
@@ -88,14 +88,3 @@ def testConvertSpreadsheetDuplicateTitlesInWorkbookRaises(templateDB: TemplateDB
   wb.save(path)
   with pytest.raises(ValueError, match='Duplicate template titles'):
     convertSpreadsheet(str(path), templateDB)
-
-
-def testReadTemplateRowsMatchesWriteTemplatesWorkbook(tmp_path: Path) -> None:
-  """Guards column layout contract between export and import."""
-  path = tmp_path / 'grid.xlsx'
-  rows_in = [('T1', 'plain ${a}', 'x'), ('T2', '<p>${b}</p>', 'y,z')]
-  write_templates_workbook(str(path), rows_in)
-  assert read_template_rows(str(path)) == [
-    ('T1', '<p>plain ${a}</p>', ['x']),
-    ('T2', '<p>${b}</p>', ['y', 'z']),
-  ]

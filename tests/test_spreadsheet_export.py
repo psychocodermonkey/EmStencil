@@ -16,26 +16,27 @@
 
 from __future__ import annotations
 
+from emstencil.content_html import export_content_as_html
 from emstencil.spreadsheet import read_template_rows, write_templates_workbook
 
 
-def testWriteTemplatesWorkbookWrapsPlainContent(tmp_path) -> None:
+def testWriteTemplatesWorkbookUsesHtmlExportForContentColumn(tmp_path) -> None:
   path = tmp_path / 'out.xlsx'
   write_templates_workbook(str(path), [('Title1', 'a & b', 't1,t2')])
   rows = read_template_rows(str(path))
   assert len(rows) == 1
   title, content, tags = rows[0]
   assert title == 'Title1'
-  assert content == '<p>a &amp; b</p>'
+  assert content == export_content_as_html('a & b')
   assert tags == ['t1', 't2']
 
 
-def testWriteTemplatesWorkbookLeavesHtmlContentUnchanged(tmp_path) -> None:
+def testWriteTemplatesWorkbookPassesThroughExistingHtmlContent(tmp_path) -> None:
   path = tmp_path / 'out.xlsx'
   body = '<table><tr><td>${x}</td></tr></table>'
-  write_templates_workbook(str(path), [('T', body, '')])
+  write_templates_workbook(str(path), [('T', body, 'tag1')])
   rows = read_template_rows(str(path))
-  assert rows[0][1] == body
+  assert rows[0] == ('T', body, ['tag1'])
 
 
 def testExportImportRoundTripAppStyleRows(tmp_path) -> None:

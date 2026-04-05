@@ -55,15 +55,11 @@ def testEmailTemplateReplacedTextReplacesPlaceholders() -> None:
   assert rendered == 'Hi Alex. Alex, your ID is 42.'
 
 
-def testEmailTemplateReplacedTextWithUnsetFieldsRaisesTypeError() -> None:
-  """Checklist #2a: EmailTemplate.replacedText raises when fields remain unset."""
-  # Arrange: default parsed fields are initialized to None.
+def testEmailTemplateWithUnsetFieldsReportsNotReadyForMerge() -> None:
+  """Checklist #2a: fieldsSet reports unresolved placeholders before merge."""
   template = EmailTemplate('Reminder', 'Hi ${name}.')
-
-  # Act / Assert: unresolved placeholders propagate None into str.replace.
-  # Python raises TypeError because the replacement argument must be a string.
-  with pytest.raises(TypeError):
-    _ = template.replacedText
+  assert template.fields == {'name': None}
+  assert template.fieldsSet is False
 
 
 def testEmailTemplateClearFieldsResetsValuesAndFieldsSet() -> None:
