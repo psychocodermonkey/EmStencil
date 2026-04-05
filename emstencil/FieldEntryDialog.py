@@ -217,11 +217,13 @@ class FieldEntryDialog(QDialog):
       return max(min(maxn, n), minn)
 
     keyLength = clamp(max(len(key) for key in self.dictionary), 5, 50)
+    textKeys = [key for key in self.dictionary if self.template.field_kinds.get(key) != 'image']
+    textFieldLengths = [
+      len(str(key)) if self.dictionary[key] is None else max(len(str(key)), len(str(self.dictionary[key])))
+      for key in textKeys
+    ]
     valueLength = clamp(
-      max(
-        len(str(key)) if value is None else max(len(str(key)), len(str(value)))
-        for key, value in self.dictionary.items()
-      ),
+      max(textFieldLengths) if textFieldLengths else keyLength,
       15,
       120,
     )
