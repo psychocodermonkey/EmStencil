@@ -137,7 +137,7 @@ class EmailTemplate:
       # Add values, ensuring we add ALL values to the dictionary.
       # Match case based on the case of the field used in the template.
       for key in values:
-        if self.fields[key]:
+        if values[key] is not None:
           if key.islower():
             self.fields[key] = values[key].lower()
 
