@@ -14,8 +14,12 @@
 
 from __future__ import annotations
 
+import base64
+import binascii
+import re
+
 from PySide6.QtCore import Qt, QMimeData
-from PySide6.QtGui import QClipboard, QFontMetrics, QKeySequence, QShortcut
+from PySide6.QtGui import QClipboard, QFontMetrics, QImage, QKeySequence, QResizeEvent, QShortcut
 from PySide6.QtWidgets import (
   QApplication,
   QMessageBox,
@@ -34,6 +38,10 @@ from .Logging import LOGGER
 
 class TemplateSelector(QWidget):
   """Class for main window for selecting and working with templates."""
+
+  _IMG_TAG_RE = re.compile(r'<img\b([^>]*)>', re.IGNORECASE)
+  _SRC_ATTR_RE = re.compile(r'''src\s*=\s*(["'])(.*?)\1''', re.IGNORECASE | re.DOTALL)
+  _DIM_ATTR_RE = re.compile(r'''\s(?:width|height)\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)''', re.IGNORECASE)
 
   def __init__(self, templateList: list, metaTags: list, parent=None) -> None:
     super(TemplateSelector, self).__init__()
@@ -167,10 +175,61 @@ class TemplateSelector(QWidget):
   def _previewTemplateBody(self, tmplt: EmailTemplate, body: str) -> None:
     """Show raw or merged body; HTML templates use rich display."""
     if is_html_content(tmplt.content):
-      self.textArea.setHtml(body)
+      self.textArea.setHtml(self._boundPreviewImageWidth(body))
 
     else:
       self.textArea.setPlainText(body)
+
+  def _boundPreviewImageWidth(self, htmlBody: str) -> str:
+    """Bound pasted data-URL images to viewport width while preserving aspect ratio."""
+    maxWidth = self._previewImageMaxWidth()
+
+    def updateTag(match: re.Match[str]) -> str:
+      attrs = match.group(1)
+      srcMatch = self._SRC_ATTR_RE.search(attrs)
+      if srcMatch is None:
+        return match.group(0)
+      imageWidth = self._dataUrlImageWidth(srcMatch.group(2))
+      if imageWidth is None or imageWidth <= maxWidth:
+        return match.group(0)
+      newAttrs = self._DIM_ATTR_RE.sub('', attrs).rstrip()
+      selfClose = ''
+      if re.search(r'/\s*$', newAttrs):
+        newAttrs = re.sub(r'/\s*$', '', newAttrs).rstrip()
+        selfClose = ' /'
+      return f'<img{newAttrs} width="{maxWidth}"{selfClose}>'
+
+    return self._IMG_TAG_RE.sub(updateTag, htmlBody)
+
+  def _previewImageMaxWidth(self) -> int:
+    """Maximum image width for the current text viewport."""
+    return max(80, self.textArea.viewport().width() - 24)
+
+  def _dataUrlImageWidth(self, src: str) -> int | None:
+    """Return decoded width for data:image URLs; None when unavailable."""
+    v = src.strip()
+    if not v.startswith('data:image/'):
+      return None
+    try:
+      comma = v.index(',')
+      raw = base64.b64decode(v[comma + 1 :], validate=False)
+    except (ValueError, binascii.Error):
+      return None
+    image = QImage.fromData(raw)
+    if image.isNull():
+      return None
+    return image.width()
+
+  def resizeEvent(self, event: QResizeEvent) -> None:
+    """Reflow preview HTML so bounded image widths track window size."""
+    super().resizeEvent(event)
+    if not hasattr(self, 'templateComboBox'):
+      return
+    tmplt = self.templateComboBox.currentData()
+    if tmplt is None:
+      return
+    body = tmplt.replacedText if tmplt.fieldsSet else tmplt.content
+    self._previewTemplateBody(tmplt, body)
 
   def _copyRenderedToClipboard(self, tmplt: EmailTemplate, rendered: str) -> None:
     """Copy merged output; HTML templates set both text/html and text/plain."""
@@ -284,3 +343,4 @@ class TemplateSelector(QWidget):
     """Close the form/application by triggering close from the parent."""
     LOGGER.info('Application close...')
     self.parent.closeWindow()
+  _PREVIEW_IMAGE_STYLE = 'max-width: 100%; height: auto;'
