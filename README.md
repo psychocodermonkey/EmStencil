@@ -14,6 +14,28 @@ When building templates, the text replaced in an email will mimic the text used 
 
 Any other entry patterns will not affect the output of the text entered on the prompt screen.
 
+### Image placeholder fields
+
+Templates also support image placeholders using the format `^{field}`.
+
+- Use `${...}` for text replacements and `^{...}` for image replacements.
+- Image placeholders are intended for HTML template content.
+- In the field entry dialog, image fields support pasting an image from the clipboard.
+  - Pasted images are stored as `data:image/...` URLs.
+- A single field key cannot be used as both `${key}` and `^{key}` in the same template.
+- For image fields, entered values are used as-is (text case formatting rules are not applied).
+
+Examples:
+
+```html
+<p>Screenshot:</p>
+<p>^{Screenshot}</p>
+```
+
+```html
+<p><img src="^{Screenshot}" alt="Screenshot" /></p>
+```
+
 There is no need to include a category for "all" as this is handled by the application to show all results.
 
 ## Application operation
