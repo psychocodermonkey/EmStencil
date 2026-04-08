@@ -99,6 +99,7 @@ class TemplateEditorDialog(QDialog):
     if self.isEditMode and self.template is not None:
       self._persistBodyAsHtml = is_html_content(self.template.content)
       self.titleField.setText(self.template.title)
+
       if self._persistBodyAsHtml:
         self.templateField.setHtml(self.template.content)
 
@@ -125,6 +126,7 @@ class TemplateEditorDialog(QDialog):
   def BuildTemplateFromFields(self) -> EmailTemplate:
     """Create template object from dialog fields."""
     title = self.titleField.text()
+
     if self._persistBodyAsHtml:
       content = self.templateField.toHtml()
 
@@ -135,6 +137,7 @@ class TemplateEditorDialog(QDialog):
         if rich_text_editor_html_should_persist_as_html(html_snapshot)
         else self.templateField.toPlainText()
       )
+
     tags = self.tagsField.text().split(',')
     metadata = [MetadataTag(tag) for tag in tags if tag != '']
 

@@ -132,9 +132,12 @@ class TemplateSelector(QWidget):
 
     for item in items:
       stringWidth: int = fontMetrics.horizontalAdvance(str(item) + ' ' * 3)
+
       if stringWidth > minWidth:
         minWidth: int = stringWidth
+
       comboBox.addItem(str(item), item)
+
     comboBoxWidth = int(minWidth * 1.35) + 28
     comboBox.setMinimumWidth(comboBoxWidth)
 
@@ -189,14 +192,17 @@ class TemplateSelector(QWidget):
       srcMatch = self._SRC_ATTR_RE.search(attrs)
       if srcMatch is None:
         return match.group(0)
+
       imageWidth = self._dataUrlImageWidth(srcMatch.group(2))
       if imageWidth is None or imageWidth <= maxWidth:
         return match.group(0)
+
       newAttrs = self._DIM_ATTR_RE.sub('', attrs).rstrip()
       selfClose = ''
       if re.search(r'/\s*$', newAttrs):
         newAttrs = re.sub(r'/\s*$', '', newAttrs).rstrip()
         selfClose = ' /'
+
       return f'<img{newAttrs} width="{maxWidth}"{selfClose}>'
 
     return self._IMG_TAG_RE.sub(updateTag, htmlBody)
@@ -210,14 +216,18 @@ class TemplateSelector(QWidget):
     v = src.strip()
     if not v.startswith('data:image/'):
       return None
+
     try:
       comma = v.index(',')
       raw = base64.b64decode(v[comma + 1 :], validate=False)
+
     except (ValueError, binascii.Error):
       return None
     image = QImage.fromData(raw)
+
     if image.isNull():
       return None
+
     return image.width()
 
   def resizeEvent(self, event: QResizeEvent) -> None:
@@ -225,9 +235,11 @@ class TemplateSelector(QWidget):
     super().resizeEvent(event)
     if not hasattr(self, 'templateComboBox'):
       return
+
     tmplt = self.templateComboBox.currentData()
     if tmplt is None:
       return
+
     body = tmplt.replacedText if tmplt.fieldsSet else tmplt.content
     self._previewTemplateBody(tmplt, body)
 
@@ -268,6 +280,7 @@ class TemplateSelector(QWidget):
     self.templateComboBox.clear()
     for tmplt in self.templateList:
       self.templateComboBox.addItem(str(tmplt), tmplt)
+
     cur = self.templateComboBox.currentData()
     self._previewTemplateBody(cur, cur.content)
     self.repaint()
@@ -293,10 +306,13 @@ class TemplateSelector(QWidget):
   def resetTemplates(self) -> None:
     """Reset all templates to default form."""
     savedIndex = self.templateComboBox.currentIndex()
+
     self.templateComboBox.clear()
+
     for tmplt in self.templateList:
       tmplt.clearFields()
       self.templateComboBox.addItem(str(tmplt), tmplt)
+
     self.templateComboBox.setCurrentIndex(savedIndex)
     cur = self.templateComboBox.currentData()
     self._previewTemplateBody(cur, cur.content)
@@ -309,6 +325,7 @@ class TemplateSelector(QWidget):
       self.editScreen = FieldEntryDialog(selectedEmailTemplate, parent=self)
       LOGGER.info('Displaying field entry dialog...')
       self.editScreen.show()
+
     else:
       self.sendUserInfoMessage('Template has no fields defined.')
 
@@ -343,4 +360,5 @@ class TemplateSelector(QWidget):
     """Close the form/application by triggering close from the parent."""
     LOGGER.info('Application close...')
     self.parent.closeWindow()
+
   _PREVIEW_IMAGE_STYLE = 'max-width: 100%; height: auto;'

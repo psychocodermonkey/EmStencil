@@ -71,6 +71,7 @@ class FileSelectionDialog(QDialog):
   def accept(self) -> None:
     if self.selected_file:
       super().accept()
+
     else:
       # Optional: disable silently, or tell user to pick a file
       self.label.setText('Select a file before pressing OK!')

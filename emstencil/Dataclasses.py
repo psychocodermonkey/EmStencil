@@ -170,17 +170,22 @@ class EmailTemplate:
     """Return modified text based on values from the internal dictionary."""
     value = self.content
     merge_as_html = is_html_content(self.content)
+
     for key in self.fields:
       fld_val = self.fields[key]
+
       if merge_as_html and self.field_kinds.get(key) == 'image' and fld_val is not None:
         v = str(fld_val).strip()
+
         if v.startswith('data:image/') or v.startswith('http://') or v.startswith('https://'):
           value = _html_merge_caret_image_field(value, key, fld_val)
           continue
+
       delim = r'\$\{' if self.field_kinds.get(key) == 'text' else r'\^\{'
       rEx = delim + re.escape(key) + r'\}'
       rExMatch = re.findall(rEx, self.content)
       replacement = html.escape(str(fld_val), quote=False) if merge_as_html else fld_val
+
       for fld in rExMatch:
         value = value.replace(fld, replacement)
 

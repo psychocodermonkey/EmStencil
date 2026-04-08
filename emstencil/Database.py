@@ -31,6 +31,7 @@ class TemplateDB:
     """Generate new instance if one doesn't exist, return the existing one if it does."""
     if not db._instance:
       db._instance = super().__new__(db, *args, **kwargs)
+
     return db._instance
 
   def __init__(self):
@@ -87,6 +88,7 @@ class TemplateDB:
         inner join tags ta on ta.uid = tt.tag_uid;
       """
     )
+
     tags_by_template: dict[int, list[str]] = {}
     for tmplt_uid, tag in cursor:
       tags_by_template.setdefault(tmplt_uid, []).append(tag)
@@ -262,6 +264,7 @@ class TemplateDB:
 
     if self.DB.in_transaction:
       return
+
     self.DB.commit()
 
     return

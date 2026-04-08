@@ -33,6 +33,7 @@ def main() -> None:
   # Handle finding the application icon correctly from packaged or source layouts.
   if getattr(sys, 'frozen', False):
     base_path = Path(sys.argv[0]).parent  # location of compiled app
+
   else:
     base_path = Path(__file__).parent  # normal source layout
 
@@ -86,5 +87,6 @@ if __name__ == '__main__':
   if is_initilized():
     LOGGER.info('Launching application...')
     main()
+
   else:
     LOGGER.error('Initialization failed. Please check the logs.')

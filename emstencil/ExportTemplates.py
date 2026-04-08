@@ -29,8 +29,10 @@ def exportTemplates(parent) -> bool:
     '',
     'Excel Files (*.xlsx)',
   )
+
   if not path:
     LOGGER.info('Template export canceled (no path).')
+
     return False
 
   p = Path(path)
@@ -46,8 +48,10 @@ def exportTemplates(parent) -> bool:
       QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.Cancel,
       QMessageBox.StandardButton.Cancel,
     )
+
     if reply != QMessageBox.StandardButton.Yes:
       LOGGER.info('Template export canceled (overwrite declined).')
+
       return False
 
   db = TemplateDB()
@@ -55,11 +59,14 @@ def exportTemplates(parent) -> bool:
 
   try:
     write_templates_workbook(path, rows)
+
   except OSError as e:
     LOGGER.error(f'Export failed: {e}')
     QMessageBox.critical(parent, 'Export failed', str(e))
+
     return False
 
   LOGGER.info(f'Exported {len(rows)} template(s) to {path}')
   QMessageBox.information(parent, 'Export', 'Export completed.')
+
   return True
