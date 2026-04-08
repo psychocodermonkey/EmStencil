@@ -33,8 +33,10 @@ _STANDALONE_DATA_URL_RE = re.compile(
 def is_html_content(content: str) -> bool:
   """True when content is treated as an HTML fragment (tables, Qt/HTML paste, export-wrapped plain)."""
   t = content.lstrip()
+
   if not t.startswith('<'):
     return False
+
   return bool(_TAG_RE.search(t))
 
 
@@ -45,6 +47,7 @@ _EDITOR_STRUCTURAL_MARKERS: tuple[str, ...] = ('<table', '<ul', '<ol', '<img', '
 def rich_text_editor_html_should_persist_as_html(editor_html: str) -> bool:
   """True when QTextEdit.toHtml() carries structure that toPlainText() would lose."""
   h = editor_html.lower()
+
   return any(m in h for m in _EDITOR_STRUCTURAL_MARKERS)
 
 
@@ -52,7 +55,9 @@ def export_content_as_html(content: str) -> str:
   """Excel export: emit HTML; wrap plain templates in a single escaped paragraph."""
   if is_html_content(content):
     return content
+
   escaped = html.escape(content, quote=False).replace('\n', '<br/>')
+
   return f'<p>{escaped}</p>'
 
 
@@ -63,4 +68,5 @@ def clipboard_plain_text_from_merged_html(html: str) -> str:
   doc.setHtml(without_imgs)
   plain = doc.toPlainText()
   plain = _STANDALONE_DATA_URL_RE.sub('[Image]', plain)
+
   return plain.strip()

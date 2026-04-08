@@ -28,6 +28,7 @@ EXPORT_HEADERS: tuple[str, str, str] = ('Title', 'Content', 'Tags')
 def _cell_str(value: object) -> str:
   if value is None:
     return ''
+
   return str(value).strip()
 
 
@@ -38,6 +39,7 @@ def read_template_rows(path: str) -> list[tuple[str, str, list[str]]]:
   """
   try:
     wb = load_workbook(path, read_only=True, data_only=True)
+
   except (BadZipFile, InvalidFileException, OSError) as e:
     raise InvalidImportFileType() from e
 
@@ -67,6 +69,8 @@ def write_templates_workbook(path: str, rows: list[tuple[str, str, str]]) -> Non
   wb = Workbook()
   ws = wb.active
   ws.append(list(EXPORT_HEADERS))
+
   for title, content, tags_csv in rows:
     ws.append([title, export_content_as_html(content), tags_csv])
+
   wb.save(path)

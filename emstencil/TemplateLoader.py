@@ -40,4 +40,5 @@ def loadTemplateSelector(parent=None) -> TemplateSelector:
     templateList.append(template)
 
   LOGGER.info('Loading template selector form.')
+
   return TemplateSelector(templateList, metaTags, parent=parent)

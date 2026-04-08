@@ -48,12 +48,16 @@ def qimage_to_png_data_url(img: QImage) -> str:
   """PNG data URL for clipboard images; empty string if encoding fails."""
   if img.isNull():
     return ''
+
   blob = QByteArray()
   buf = QBuffer(blob)
   buf.open(QIODevice.OpenModeFlag.WriteOnly)
+
   if not img.save(buf, 'PNG'):
     return ''
+
   encoded = base64.b64encode(blob.data()).decode('ascii')
+
   return f'data:image/png;base64,{encoded}'
 
 
@@ -66,6 +70,7 @@ class ImagePasteLineEdit(QLineEdit):
     *,
     on_image_pasted: Callable[[str], None] | None = None,
   ) -> None:
+
     super().__init__(parent)
     self._on_image_pasted = on_image_pasted
 
@@ -73,7 +78,9 @@ class ImagePasteLineEdit(QLineEdit):
     if event.matches(QKeySequence.StandardKey.Paste):
       if self._paste_clipboard_image():
         event.accept()
+
         return
+
     super().keyPressEvent(event)
 
   def contextMenuEvent(self, event: QContextMenuEvent) -> None:
@@ -94,35 +101,50 @@ class ImagePasteLineEdit(QLineEdit):
     mime = cb.mimeData()
     if mime is None or not mime.hasImage():
       return False
+
     img = cb.image()
+
     if img.isNull():
       pm = cb.pixmap()
+
       if pm is None or pm.isNull():
         return False
+
       img = pm.toImage()
+
     url = qimage_to_png_data_url(img)
+
     if not url:
       return False
+
     if self._on_image_pasted is not None:
       self._on_image_pasted(url)
       return True
+
     self.setText(url)
+
     return True
 
 
 def _pixmap_from_data_url(url: str) -> QPixmap | None:
   """Decode data:image/* URL to a pixmap, or None."""
   u = url.strip()
+
   if not u.startswith('data:image/'):
     return None
+
   try:
     comma = u.index(',')
     raw = base64.b64decode(u[comma + 1 :])
+
   except (ValueError, binascii.Error):
     return None
+
   img = QImage.fromData(raw)
+
   if img.isNull():
     return None
+
   return QPixmap.fromImage(img).scaled(
     72,
     72,
@@ -143,10 +165,13 @@ class ImageFieldRow(QWidget):
     self._thumb.setFrameShape(QFrame.Shape.StyledPanel)
     self._line = ImagePasteLineEdit(self, on_image_pasted=self._store_pasted_image)
     self._line.setMinimumWidth(min_line_width)
+
     if initial.strip().startswith('data:image/'):
       self._pasted_data_url = initial
+
     elif initial:
       self._line.setText(initial)
+
     self._update_placeholder()
     self._line.textChanged.connect(self._on_line_text_changed)
     self._sync_thumb()
@@ -157,8 +182,10 @@ class ImageFieldRow(QWidget):
 
   def field_text(self) -> str:
     typed = self._line.text()
+
     if typed.strip():
       return typed
+
     return self._pasted_data_url or ''
 
   def _store_pasted_image(self, url: str) -> None:
@@ -172,29 +199,38 @@ class ImageFieldRow(QWidget):
   def _on_line_text_changed(self, text: str) -> None:
     if text.strip():
       self._pasted_data_url = None
+
     self._update_placeholder()
     self._sync_thumb()
 
   def _update_placeholder(self) -> None:
     if self._pasted_data_url and not self._line.text().strip():
       self._line.setPlaceholderText('Type here to replace pasted image with URL or text')
+
     else:
       self._line.setPlaceholderText('Paste image (Ctrl+V) or type a URL / placeholder text')
 
   def _sync_thumb(self) -> None:
     self._thumb.clear()
     typed = self._line.text().strip()
+
     if typed.startswith('data:image/'):
       pix = _pixmap_from_data_url(self._line.text())
+
       if pix is None:
         self._thumb.setText('?')
+
       else:
         self._thumb.setPixmap(pix)
+
       return
+
     if typed:
       return
+
     if self._pasted_data_url:
       pix = _pixmap_from_data_url(self._pasted_data_url)
+
       if pix is not None:
         self._thumb.setPixmap(pix)
 
@@ -218,15 +254,20 @@ class FieldEntryDialog(QDialog):
 
     keyLength = clamp(max(len(key) for key in self.dictionary), 5, 50)
     textKeys = [key for key in self.dictionary if self.template.field_kinds.get(key) != 'image']
+
     textFieldLengths = [
-      len(str(key)) if self.dictionary[key] is None else max(len(str(key)), len(str(self.dictionary[key])))
+      len(str(key))
+      if self.dictionary[key] is None
+      else max(len(str(key)), len(str(self.dictionary[key])))
       for key in textKeys
     ]
+
     valueLength = clamp(
       max(textFieldLengths) if textFieldLengths else keyLength,
       15,
       120,
     )
+
     metrics = QFontMetrics(QLineEdit().font())
     minLengthForKeys = metrics.horizontalAdvance('M' * keyLength)
     minLengthForData = metrics.horizontalAdvance('M' * valueLength)
@@ -244,14 +285,21 @@ class FieldEntryDialog(QDialog):
 
       if self.template.field_kinds.get(key) == 'image':
         initial = str(value) if value else ''
-        input_widget: QLineEdit | ImageFieldRow = ImageFieldRow(minLengthForData, initial, parent=self)
+
+        input_widget: QLineEdit | ImageFieldRow = ImageFieldRow(
+          minLengthForData, initial, parent=self
+        )
+
       else:
         txt_input = QLineEdit()
         txt_input.setMinimumWidth(minLengthForData)
+
         if value:
           txt_input.setText(str(value))
+
         else:
           txt_input.setText('')
+
         input_widget = txt_input
 
       self._value_widgets_by_key[key] = input_widget
@@ -275,6 +323,7 @@ class FieldEntryDialog(QDialog):
     for key, w in self._value_widgets_by_key.items():
       if isinstance(w, ImageFieldRow):
         self.dictionary[key] = w.field_text()
+
       else:
         self.dictionary[key] = w.text()
 
