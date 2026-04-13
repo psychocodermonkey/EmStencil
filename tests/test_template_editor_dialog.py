@@ -23,7 +23,7 @@ import pytest
 from PySide6.QtWidgets import QApplication
 
 from emstencil.Dataclasses import EmailTemplate
-from emstencil.content_html import is_html_content
+from emstencil.content_html import isHTMLContent
 
 
 @pytest.fixture
@@ -63,7 +63,7 @@ def testEditorHtmlTemplateUsesHtmlPersist(qapp: QApplication, mock_db: None) -> 
   out = dlg.BuildTemplateFromFields().content
   assert out == expected
   assert '${name}' in out
-  assert is_html_content(out) is True
+  assert isHTMLContent(out) is True
 
 
 def testEditorNewTemplateIsPlainPersist(qapp: QApplication, mock_db: None) -> None:

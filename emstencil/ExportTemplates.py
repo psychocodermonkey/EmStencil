@@ -18,7 +18,7 @@ from pathlib import Path
 from PySide6.QtWidgets import QFileDialog, QMessageBox
 from .Database import TemplateDB
 from .Logging import LOGGER
-from .spreadsheet import write_templates_workbook
+from .spreadsheet import writeTemplatesWorkbook
 
 
 def exportTemplates(parent) -> bool:
@@ -58,7 +58,7 @@ def exportTemplates(parent) -> bool:
   rows = db.FetchAllTemplatesForExport()
 
   try:
-    write_templates_workbook(path, rows)
+    writeTemplatesWorkbook(path, rows)
 
   except OSError as e:
     LOGGER.error(f'Export failed: {e}')

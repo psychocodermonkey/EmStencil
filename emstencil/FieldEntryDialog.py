@@ -44,7 +44,7 @@ from .Dataclasses import EmailTemplate
 from .Exceptions import TemplateKeyValueNull
 
 
-def qimage_to_png_data_url(img: QImage) -> str:
+def qimageToPngDataURL(img: QImage) -> str:
   """PNG data URL for clipboard images; empty string if encoding fails."""
   if img.isNull():
     return ''
@@ -68,15 +68,15 @@ class ImagePasteLineEdit(QLineEdit):
     self,
     parent: QWidget | None = None,
     *,
-    on_image_pasted: Callable[[str], None] | None = None,
+    onImagePasted: Callable[[str], None] | None = None,
   ) -> None:
 
     super().__init__(parent)
-    self._on_image_pasted = on_image_pasted
+    self._onImagePasted = onImagePasted
 
   def keyPressEvent(self, event: QKeyEvent) -> None:
     if event.matches(QKeySequence.StandardKey.Paste):
-      if self._paste_clipboard_image():
+      if self._pasteClipboardImage():
         event.accept()
 
         return
@@ -87,16 +87,16 @@ class ImagePasteLineEdit(QLineEdit):
     menu = QMenu(self)
     menu.addAction('Cut', self.cut)
     menu.addAction('Copy', self.copy)
-    menu.addAction('Paste', self._paste_action)
+    menu.addAction('Paste', self._pasteAction)
     menu.addSeparator()
     menu.addAction('Select All', self.selectAll)
     menu.exec(event.globalPos())
 
-  def _paste_action(self) -> None:
-    if not self._paste_clipboard_image():
+  def _pasteAction(self) -> None:
+    if not self._pasteClipboardImage():
       self.paste()
 
-  def _paste_clipboard_image(self) -> bool:
+  def _pasteClipboardImage(self) -> bool:
     cb = QApplication.clipboard()
     mime = cb.mimeData()
     if mime is None or not mime.hasImage():
@@ -112,13 +112,13 @@ class ImagePasteLineEdit(QLineEdit):
 
       img = pm.toImage()
 
-    url = qimage_to_png_data_url(img)
+    url = qimageToPngDataURL(img)
 
     if not url:
       return False
 
-    if self._on_image_pasted is not None:
-      self._on_image_pasted(url)
+    if self._onImagePasted is not None:
+      self._onImagePasted(url)
       return True
 
     self.setText(url)
@@ -126,7 +126,7 @@ class ImagePasteLineEdit(QLineEdit):
     return True
 
 
-def _pixmap_from_data_url(url: str) -> QPixmap | None:
+def _pixmapFromDataURL(url: str) -> QPixmap | None:
   """Decode data:image/* URL to a pixmap, or None."""
   u = url.strip()
 
@@ -156,66 +156,66 @@ def _pixmap_from_data_url(url: str) -> QPixmap | None:
 class ImageFieldRow(QWidget):
   """Thumbnail + line edit; pasted image kept off-widget so the field does not show base64."""
 
-  def __init__(self, min_line_width: int, initial: str, parent: QWidget | None = None) -> None:
+  def __init__(self, minLineWidth: int, initial: str, parent: QWidget | None = None) -> None:
     super().__init__(parent)
-    self._pasted_data_url: str | None = None
+    self._pastedDataURL: str | None = None
     self._thumb = QLabel()
     self._thumb.setFixedSize(72, 72)
     self._thumb.setAlignment(Qt.AlignmentFlag.AlignCenter)
     self._thumb.setFrameShape(QFrame.Shape.StyledPanel)
-    self._line = ImagePasteLineEdit(self, on_image_pasted=self._store_pasted_image)
-    self._line.setMinimumWidth(min_line_width)
+    self._line = ImagePasteLineEdit(self, onImagePasted=self._storePastedImage)
+    self._line.setMinimumWidth(minLineWidth)
 
     if initial.strip().startswith('data:image/'):
-      self._pasted_data_url = initial
+      self._pastedDataURL = initial
 
     elif initial:
       self._line.setText(initial)
 
-    self._update_placeholder()
-    self._line.textChanged.connect(self._on_line_text_changed)
-    self._sync_thumb()
+    self._updatePlaceholder()
+    self._line.textChanged.connect(self._onLineTextChanged)
+    self._syncThumb()
     row = QHBoxLayout(self)
     row.setContentsMargins(0, 0, 0, 0)
     row.addWidget(self._thumb)
     row.addWidget(self._line, stretch=1)
 
-  def field_text(self) -> str:
+  def fieldText(self) -> str:
     typed = self._line.text()
 
     if typed.strip():
       return typed
 
-    return self._pasted_data_url or ''
+    return self._pastedDataURL or ''
 
-  def _store_pasted_image(self, url: str) -> None:
-    self._pasted_data_url = url
+  def _storePastedImage(self, url: str) -> None:
+    self._pastedDataURL = url
     self._line.blockSignals(True)
     self._line.clear()
     self._line.blockSignals(False)
-    self._update_placeholder()
-    self._sync_thumb()
+    self._updatePlaceholder()
+    self._syncThumb()
 
-  def _on_line_text_changed(self, text: str) -> None:
+  def _onLineTextChanged(self, text: str) -> None:
     if text.strip():
-      self._pasted_data_url = None
+      self._pastedDataURL = None
 
-    self._update_placeholder()
-    self._sync_thumb()
+    self._updatePlaceholder()
+    self._syncThumb()
 
-  def _update_placeholder(self) -> None:
-    if self._pasted_data_url and not self._line.text().strip():
+  def _updatePlaceholder(self) -> None:
+    if self._pastedDataURL and not self._line.text().strip():
       self._line.setPlaceholderText('Type here to replace pasted image with URL or text')
 
     else:
       self._line.setPlaceholderText('Paste image (Ctrl+V) or type a URL / placeholder text')
 
-  def _sync_thumb(self) -> None:
+  def _syncThumb(self) -> None:
     self._thumb.clear()
     typed = self._line.text().strip()
 
     if typed.startswith('data:image/'):
-      pix = _pixmap_from_data_url(self._line.text())
+      pix = _pixmapFromDataURL(self._line.text())
 
       if pix is None:
         self._thumb.setText('?')
@@ -228,8 +228,8 @@ class ImageFieldRow(QWidget):
     if typed:
       return
 
-    if self._pasted_data_url:
-      pix = _pixmap_from_data_url(self._pasted_data_url)
+    if self._pastedDataURL:
+      pix = _pixmapFromDataURL(self._pastedDataURL)
 
       if pix is not None:
         self._thumb.setPixmap(pix)
@@ -253,7 +253,7 @@ class FieldEntryDialog(QDialog):
       return max(min(maxn, n), minn)
 
     keyLength = clamp(max(len(key) for key in self.dictionary), 5, 50)
-    textKeys = [key for key in self.dictionary if self.template.field_kinds.get(key) != 'image']
+    textKeys = [key for key in self.dictionary if self.template.fieldKinds.get(key) != 'image']
 
     textFieldLengths = [
       len(str(key))
@@ -272,7 +272,7 @@ class FieldEntryDialog(QDialog):
     minLengthForKeys = metrics.horizontalAdvance('M' * keyLength)
     minLengthForData = metrics.horizontalAdvance('M' * valueLength)
 
-    self._value_widgets_by_key: dict[str, QLineEdit | ImageFieldRow] = {}
+    self._valueWidgetsByKey: dict[str, QLineEdit | ImageFieldRow] = {}
 
     # Build the dialog on the fly for the keys in the database.
     for key, value in self.dictionary.items():
@@ -283,30 +283,30 @@ class FieldEntryDialog(QDialog):
       label.setAlignment(Qt.AlignmentFlag.AlignRight)
       label.setFixedWidth(minLengthForKeys)
 
-      if self.template.field_kinds.get(key) == 'image':
+      if self.template.fieldKinds.get(key) == 'image':
         initial = str(value) if value else ''
 
-        input_widget: QLineEdit | ImageFieldRow = ImageFieldRow(
+        inputWidget: QLineEdit | ImageFieldRow = ImageFieldRow(
           minLengthForData, initial, parent=self
         )
 
       else:
-        txt_input = QLineEdit()
-        txt_input.setMinimumWidth(minLengthForData)
+        txtInput = QLineEdit()
+        txtInput.setMinimumWidth(minLengthForData)
 
         if value:
-          txt_input.setText(str(value))
+          txtInput.setText(str(value))
 
         else:
-          txt_input.setText('')
+          txtInput.setText('')
 
-        input_widget = txt_input
+        inputWidget = txtInput
 
-      self._value_widgets_by_key[key] = input_widget
+      self._valueWidgetsByKey[key] = inputWidget
 
       # Group the label and the field together.
       fieldGroup.addWidget(label)
-      fieldGroup.addWidget(input_widget)
+      fieldGroup.addWidget(inputWidget)
 
       # Add the label and field group to the form.
       self.layout.addLayout(fieldGroup)
@@ -320,9 +320,9 @@ class FieldEntryDialog(QDialog):
 
   def submit(self) -> None:
     """Submit button for form, gather information and pass it back to the main form."""
-    for key, w in self._value_widgets_by_key.items():
+    for key, w in self._valueWidgetsByKey.items():
       if isinstance(w, ImageFieldRow):
-        self.dictionary[key] = w.field_text()
+        self.dictionary[key] = w.fieldText()
 
       else:
         self.dictionary[key] = w.text()

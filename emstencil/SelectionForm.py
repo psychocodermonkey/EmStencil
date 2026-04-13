@@ -29,7 +29,7 @@ from PySide6.QtWidgets import (
   QMainWindow,
 )
 from PySide6.QtWidgets import QPushButton, QTextEdit, QComboBox
-from .content_html import clipboard_plain_text_from_merged_html, is_html_content
+from .content_html import clipboardPlainTextFromMergedHTML, isHTMLContent
 from .Database import TemplateDB
 from .FieldEntryDialog import FieldEntryDialog
 from .Dataclasses import EmailTemplate, MetadataTag
@@ -177,7 +177,7 @@ class TemplateSelector(QWidget):
 
   def _previewTemplateBody(self, tmplt: EmailTemplate, body: str) -> None:
     """Show raw or merged body; HTML templates use rich display."""
-    if is_html_content(tmplt.content):
+    if isHTMLContent(tmplt.content):
       self.textArea.setHtml(self._boundPreviewImageWidth(body))
 
     else:
@@ -245,10 +245,10 @@ class TemplateSelector(QWidget):
 
   def _copyRenderedToClipboard(self, tmplt: EmailTemplate, rendered: str) -> None:
     """Copy merged output; HTML templates set both text/html and text/plain."""
-    if is_html_content(tmplt.content):
+    if isHTMLContent(tmplt.content):
       mime = QMimeData()
       mime.setHtml(rendered)
-      mime.setText(clipboard_plain_text_from_merged_html(rendered))
+      mime.setText(clipboardPlainTextFromMergedHTML(rendered))
       self.clipboard.setMimeData(mime)
 
     else:

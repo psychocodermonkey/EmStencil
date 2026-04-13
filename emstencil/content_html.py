@@ -30,7 +30,7 @@ _STANDALONE_DATA_URL_RE = re.compile(
 )
 
 
-def is_html_content(content: str) -> bool:
+def isHTMLContent(content: str) -> bool:
   """True when content is treated as an HTML fragment (tables, Qt/HTML paste, export-wrapped plain)."""
   t = content.lstrip()
 
@@ -44,16 +44,16 @@ def is_html_content(content: str) -> bool:
 _EDITOR_STRUCTURAL_MARKERS: tuple[str, ...] = ('<table', '<ul', '<ol', '<img', '<hr')
 
 
-def rich_text_editor_html_should_persist_as_html(editor_html: str) -> bool:
+def persistHTMLasRichText(editorHTML: str) -> bool:
   """True when QTextEdit.toHtml() carries structure that toPlainText() would lose."""
-  h = editor_html.lower()
+  h = editorHTML.lower()
 
   return any(m in h for m in _EDITOR_STRUCTURAL_MARKERS)
 
 
-def export_content_as_html(content: str) -> str:
+def exportContentAsHTML(content: str) -> str:
   """Excel export: emit HTML; wrap plain templates in a single escaped paragraph."""
-  if is_html_content(content):
+  if isHTMLContent(content):
     return content
 
   escaped = html.escape(content, quote=False).replace('\n', '<br/>')
@@ -61,11 +61,11 @@ def export_content_as_html(content: str) -> str:
   return f'<p>{escaped}</p>'
 
 
-def clipboard_plain_text_from_merged_html(html: str) -> str:
+def clipboardPlainTextFromMergedHTML(html: str) -> str:
   """text/plain for clipboard: keep readable text without embedding data-URL payloads."""
-  without_imgs = _IMG_TAG_RE.sub('\n[Image]\n', html)
+  withoutImgs = _IMG_TAG_RE.sub('\n[Image]\n', html)
   doc = QTextDocument()
-  doc.setHtml(without_imgs)
+  doc.setHtml(withoutImgs)
   plain = doc.toPlainText()
   plain = _STANDALONE_DATA_URL_RE.sub('[Image]', plain)
 

@@ -41,12 +41,12 @@ class TemplateKeyValueNull(Exception):
 class TemplateFieldKindConflict(Exception):
   """Same field name used as ${...} and ^{...} (or other kinds) in one template body."""
 
-  def __init__(self, key: str, existing_kind: str, conflicting_kind: str) -> None:
+  def __init__(self, key: str, existingKind: str, conflictingKind: str) -> None:
     self.key = key
-    self.existing_kind = existing_kind
-    self.conflicting_kind = conflicting_kind
+    self.existingKind = existingKind
+    self.conflictingKind = conflictingKind
     self.message = (
-      f'Field {key!r} is declared as both {existing_kind} and {conflicting_kind} placeholders.'
+      f'Field {key!r} is declared as both {existingKind} and {conflictingKind} placeholders.'
     )
     super().__init__(self.message)
 

@@ -14,5 +14,5 @@
 """
 
 from .Ubiquitous import DATA_DIR, DATABASE_FILE, LOG_PATH
-from .initialize import is_initilized
+from .initialize import isinitialized
 from .Logging import LOGGER

@@ -89,13 +89,13 @@ class TemplateDB:
       """
     )
 
-    tags_by_template: dict[int, list[str]] = {}
-    for tmplt_uid, tag in cursor:
-      tags_by_template.setdefault(tmplt_uid, []).append(tag)
+    tagsByTemplate: dict[int, list[str]] = {}
+    for tmpltUID, tag in cursor:
+      tagsByTemplate.setdefault(tmpltUID, []).append(tag)
 
     result: list[tuple[str, str, str]] = []
     for uid, title, content in templates:
-      tags = sorted(tags_by_template.get(uid, []))
+      tags = sorted(tagsByTemplate.get(uid, []))
       result.append((title, content, ','.join(tags)))
 
     return result

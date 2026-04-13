@@ -18,7 +18,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent, QKeySequence, QShortcut
 from PySide6.QtWidgets import QDialog, QLabel, QLineEdit, QTextEdit, QPushButton
 from PySide6.QtWidgets import QHBoxLayout, QVBoxLayout, QMessageBox
-from .content_html import is_html_content, rich_text_editor_html_should_persist_as_html
+from .content_html import isHTMLContent, persistHTMLasRichText
 from .Database import TemplateDB
 from .Dataclasses import EmailTemplate, MetadataTag
 
@@ -97,7 +97,7 @@ class TemplateEditorDialog(QDialog):
     self.loadingValues = True
 
     if self.isEditMode and self.template is not None:
-      self._persistBodyAsHtml = is_html_content(self.template.content)
+      self._persistBodyAsHtml = isHTMLContent(self.template.content)
       self.titleField.setText(self.template.title)
 
       if self._persistBodyAsHtml:
@@ -131,10 +131,10 @@ class TemplateEditorDialog(QDialog):
       content = self.templateField.toHtml()
 
     else:
-      html_snapshot = self.templateField.toHtml()
+      htmlSnapshot = self.templateField.toHtml()
       content = (
-        html_snapshot
-        if rich_text_editor_html_should_persist_as_html(html_snapshot)
+        htmlSnapshot
+        if persistHTMLasRichText(htmlSnapshot)
         else self.templateField.toPlainText()
       )
 

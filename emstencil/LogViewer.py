@@ -21,7 +21,7 @@ from .Logging import LOGGER
 
 
 class LogViewer(QDialog):
-  def __init__(self, log_path: Path, parent=None):
+  def __init__(self, logPath: Path, parent=None):
     super().__init__(parent)
     self.setWindowTitle('Application Run Log')
     self.resize(900, 600)
@@ -29,23 +29,23 @@ class LogViewer(QDialog):
     layout = QVBoxLayout(self)
 
     # QTextEdit for displaying log content (read-only)
-    self.text_area = QTextEdit()
-    self.text_area.setReadOnly(True)
-    layout.addWidget(self.text_area)
+    self.textArea = QTextEdit()
+    self.textArea.setReadOnly(True)
+    layout.addWidget(self.textArea)
 
     # Close button (optional)
-    close_btn = QPushButton('Close')
-    close_btn.clicked.connect(self.close)
-    layout.addWidget(close_btn)
+    closeBtn = QPushButton('Close')
+    closeBtn.clicked.connect(self.close)
+    layout.addWidget(closeBtn)
     LOGGER.info('LogViewer init completed.')
 
     # Load the log file content
     try:
-      with log_path.open('r', encoding='utf-8') as f:
-        self.text_area.setPlainText(f.read())
+      with logPath.open('r', encoding='utf-8') as fp:
+        self.textArea.setPlainText(fp.read())
 
     except FileNotFoundError:
-      self.text_area.setPlainText('Log file not found.')
+      self.textArea.setPlainText('Log file not found.')
 
     except Exception as e:
-      self.text_area.setPlainText(f'Error loading log file:\n{e}')
+      self.textArea.setPlainText(f'Error loading log file:\n{e}')

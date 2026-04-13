@@ -19,7 +19,7 @@ import platform
 from pathlib import Path
 
 
-def get_user_data_dir() -> Path:
+def getUserDataDir() -> Path:
   """
   Set local persistent storage path in "user" application storage.
   """
@@ -46,6 +46,6 @@ def get_user_data_dir() -> Path:
   return base
 
 
-DATA_DIR = get_user_data_dir()  # Data directory for persistent storage.
+DATA_DIR = getUserDataDir()  # Data directory for persistent storage.
 DATABASE_FILE = DATA_DIR / 'templates.db'  # Path for database file.
 LOG_PATH = DATA_DIR / 'runlog.log'  # Path for runtime log file.

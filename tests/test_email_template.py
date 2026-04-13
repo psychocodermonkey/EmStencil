@@ -144,9 +144,9 @@ def testEmailTemplateReplacedTextEscapesValuesInHtmlBody() -> None:
 
 def testExportWrappedPlainIsDetectedAsHtmlForMerge() -> None:
   """Export-wrapped body is HTML for merge/escape; field values still follow placeholder case."""
-  from emstencil.content_html import export_content_as_html
+  from emstencil.content_html import exportContentAsHTML
 
-  wrapped = export_content_as_html('Hi ${name}')
+  wrapped = exportContentAsHTML('Hi ${name}')
   template = EmailTemplate('T', wrapped)
   template.setFields({'name': 'BOB'})
   assert template.fields['name'] == 'bob'
@@ -158,7 +158,7 @@ def testEmailTemplateImagePlaceholderPlainBodyWrappedAsHtml() -> None:
   template = EmailTemplate('Img', 'Hello ^{Logo} there')
   assert template.content == '<p>Hello ^{Logo} there</p>'
   assert list(template.fields.keys()) == ['Logo']
-  assert template.field_kinds == {'Logo': 'image'}
+  assert template.fieldKinds == {'Logo': 'image'}
 
 
 def testEmailTemplateFieldKindConflictRaises() -> None:
@@ -172,7 +172,7 @@ def testEmailTemplateMixedTextAndImagePlaceholders() -> None:
   """Document order defines field keys; merge uses correct delimiters per kind."""
   template = EmailTemplate('Mix', '<p>${name} see ^{Shot}</p>')
   assert list(template.fields.keys()) == ['name', 'Shot']
-  assert template.field_kinds == {'name': 'text', 'Shot': 'image'}
+  assert template.fieldKinds == {'name': 'text', 'Shot': 'image'}
   template.setFields({'name': 'Pat', 'Shot': 'http://example.com/x.png'})
   assert template.replacedText == (
     '<p>pat see <img src="http://example.com/x.png" alt="Shot" /></p>'

@@ -23,7 +23,7 @@ import pytest
 from PySide6.QtGui import QImage
 from PySide6.QtWidgets import QApplication
 
-from emstencil.FieldEntryDialog import ImageFieldRow, qimage_to_png_data_url
+from emstencil.FieldEntryDialog import ImageFieldRow, qimageToPngDataURL
 
 
 @pytest.fixture(scope='module')
@@ -38,7 +38,7 @@ def qapp() -> QApplication:
 def test_qimage_to_png_data_url_non_empty(qapp: QApplication) -> None:
   img = QImage(6, 6, QImage.Format.Format_RGB32)
   img.fill(0x00AAFF)
-  url = qimage_to_png_data_url(img)
+  url = qimageToPngDataURL(img)
   prefix = 'data:image/png;base64,'
   assert url.startswith(prefix)
   encoded = url.removeprefix(prefix)
@@ -47,15 +47,15 @@ def test_qimage_to_png_data_url_non_empty(qapp: QApplication) -> None:
 
 
 def test_qimage_to_png_data_url_null_is_empty(qapp: QApplication) -> None:
-  assert qimage_to_png_data_url(QImage()) == ''
+  assert qimageToPngDataURL(QImage()) == ''
 
 
 def test_image_field_row_keeps_paste_off_line_edit(qapp: QApplication) -> None:
   """Pasted image is merged as data URL but the line edit stays short for UX."""
   img = QImage(5, 5, QImage.Format.Format_RGB32)
   img.fill(0xABCDEF)
-  url = qimage_to_png_data_url(img)
+  url = qimageToPngDataURL(img)
   row = ImageFieldRow(180, '')
-  row._store_pasted_image(url)
+  row._storePastedImage(url)
   assert row._line.text() == ''
-  assert row.field_text() == url
+  assert row.fieldText() == url

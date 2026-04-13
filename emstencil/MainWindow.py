@@ -103,9 +103,9 @@ class EmStencil(QMainWindow):
   def reloadTemplateSelector(self) -> None:
     """Reload the central template selector widget."""
     # Remove old widget
-    old_widget = self.takeCentralWidget()
-    if old_widget:
-      old_widget.deleteLater()
+    oldWidget = self.takeCentralWidget()
+    if oldWidget:
+      oldWidget.deleteLater()
       LOGGER.info('Releasing old central widget.')
 
     self.setCentralWidget(loadTemplateSelector(self))

@@ -22,10 +22,10 @@ import pytest
 from PySide6.QtWidgets import QApplication
 
 from emstencil.content_html import (
-  clipboard_plain_text_from_merged_html,
-  export_content_as_html,
-  is_html_content,
-  rich_text_editor_html_should_persist_as_html,
+  clipboardPlainTextFromMergedHTML,
+  exportContentAsHTML,
+  isHTMLContent,
+  persistHTMLasRichText,
 )
 
 
@@ -38,33 +38,33 @@ def qapp() -> QApplication:
 
 
 def testIsHtmlContentFalseForPlainAndLooseAngle() -> None:
-  assert is_html_content('Hello ${name}') is False
-  assert is_html_content('2 < 3 and ${x}') is False
-  assert is_html_content('<3 friends') is False
+  assert isHTMLContent('Hello ${name}') is False
+  assert isHTMLContent('2 < 3 and ${x}') is False
+  assert isHTMLContent('<3 friends') is False
 
 
 def testIsHtmlContentTrueForTableAndParagraphFragments() -> None:
-  assert is_html_content('<table><tr><td>${x}</td></tr></table>') is True
-  assert is_html_content('  <p>Hi ${name}</p>') is True
+  assert isHTMLContent('<table><tr><td>${x}</td></tr></table>') is True
+  assert isHTMLContent('  <p>Hi ${name}</p>') is True
 
 
 def testHtmlHelperExportContentAsHtmlLeavesHtmlUnchanged() -> None:
   body = '<p>a & b</p>'
-  assert export_content_as_html(body) == body
+  assert exportContentAsHTML(body) == body
 
 
 def testHtmlHelperExportContentAsHtmlWrapsPlainWithEscaping() -> None:
-  assert export_content_as_html('a & b') == '<p>a &amp; b</p>'
+  assert exportContentAsHTML('a & b') == '<p>a &amp; b</p>'
 
 
 def testHtmlHelperExportContentAsHtmlConvertsNewlinesToBr() -> None:
-  assert export_content_as_html('line1\nline2') == '<p>line1<br/>line2</p>'
+  assert exportContentAsHTML('line1\nline2') == '<p>line1<br/>line2</p>'
 
 
 def testRichTextEditorHtmlShouldPersistDetectsStructure() -> None:
-  assert rich_text_editor_html_should_persist_as_html('<html><body><p>x</p></body></html>') is False
-  assert rich_text_editor_html_should_persist_as_html('<TABLE><tr><td>a</td></tr></TABLE>') is True
-  assert rich_text_editor_html_should_persist_as_html('<ul><li>x</li></ul>') is True
+  assert persistHTMLasRichText('<html><body><p>x</p></body></html>') is False
+  assert persistHTMLasRichText('<TABLE><tr><td>a</td></tr></TABLE>') is True
+  assert persistHTMLasRichText('<ul><li>x</li></ul>') is True
 
 
 def testClipboardPlainTextOmitsDataUrls(qapp: QApplication) -> None:
@@ -73,7 +73,7 @@ def testClipboardPlainTextOmitsDataUrls(qapp: QApplication) -> None:
     '<img src="data:image/png;base64,QUJDREVGRw==" alt="x" />'
     '<p>Bye</p>'
   )
-  plain = clipboard_plain_text_from_merged_html(html)
+  plain = clipboardPlainTextFromMergedHTML(html)
   assert 'data:image' not in plain
   assert 'Hello world' in plain
   assert 'Bye' in plain
@@ -83,6 +83,6 @@ def testClipboardPlainTextOmitsDataUrls(qapp: QApplication) -> None:
 def testClipboardPlainTextStripsBareDataUrlLine(qapp: QApplication) -> None:
   """If a data URL appears as its own text (leaked from conversion), scrub it."""
   html = '<p>Intro</p><p>data:image/png;base64,QUJD</p>'
-  plain = clipboard_plain_text_from_merged_html(html)
+  plain = clipboardPlainTextFromMergedHTML(html)
   assert 'data:image' not in plain
   assert 'Intro' in plain

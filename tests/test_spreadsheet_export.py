@@ -16,26 +16,26 @@
 
 from __future__ import annotations
 
-from emstencil.content_html import export_content_as_html
-from emstencil.spreadsheet import read_template_rows, write_templates_workbook
+from emstencil.content_html import exportContentAsHTML
+from emstencil.spreadsheet import readTemplateRows, writeTemplatesWorkbook
 
 
 def testWriteTemplatesWorkbookUsesHtmlExportForContentColumn(tmp_path) -> None:
   path = tmp_path / 'out.xlsx'
-  write_templates_workbook(str(path), [('Title1', 'a & b', 't1,t2')])
-  rows = read_template_rows(str(path))
+  writeTemplatesWorkbook(str(path), [('Title1', 'a & b', 't1,t2')])
+  rows = readTemplateRows(str(path))
   assert len(rows) == 1
   title, content, tags = rows[0]
   assert title == 'Title1'
-  assert content == export_content_as_html('a & b')
+  assert content == exportContentAsHTML('a & b')
   assert tags == ['t1', 't2']
 
 
 def testWriteTemplatesWorkbookPassesThroughExistingHtmlContent(tmp_path) -> None:
   path = tmp_path / 'out.xlsx'
   body = '<table><tr><td>${x}</td></tr></table>'
-  write_templates_workbook(str(path), [('T', body, 'tag1')])
-  rows = read_template_rows(str(path))
+  writeTemplatesWorkbook(str(path), [('T', body, 'tag1')])
+  rows = readTemplateRows(str(path))
   assert rows[0] == ('T', body, ['tag1'])
 
 
@@ -46,7 +46,7 @@ def testExportImportRoundTripAppStyleRows(tmp_path) -> None:
     ('Plain', 'Hello ${name}', 'a'),
     ('Rich', '<p>Hi ${name}</p>', 'b'),
   ]
-  write_templates_workbook(str(path), original_rows)
-  back = read_template_rows(str(path))
+  writeTemplatesWorkbook(str(path), original_rows)
+  back = readTemplateRows(str(path))
   assert back[0] == ('Plain', '<p>Hello ${name}</p>', ['a'])
   assert back[1] == ('Rich', '<p>Hi ${name}</p>', ['b'])

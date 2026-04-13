@@ -21,11 +21,11 @@ from pathlib import Path
 import pytest
 from openpyxl import Workbook
 
-from emstencil.content_html import is_html_content
+from emstencil.content_html import isHTMLContent
 from emstencil.Database import TemplateDB
 from emstencil.Dataclasses import EmailTemplate, MetadataTag
 from emstencil.ImportTemplates import convertSpreadsheet
-from emstencil.spreadsheet import EXPORT_HEADERS, write_templates_workbook
+from emstencil.spreadsheet import EXPORT_HEADERS, writeTemplatesWorkbook
 
 
 def _content_for_title(templateDB: TemplateDB, title: str) -> str:
@@ -42,12 +42,12 @@ def testExportThenImportUpsertsPlainTemplateAsHtmlInDb(templateDB: TemplateDB, t
   t.metadata = [MetadataTag('one')]
   templateDB.AddTemplate(t)
   path = tmp_path / 'round.xlsx'
-  write_templates_workbook(str(path), templateDB.FetchAllTemplatesForExport())
+  writeTemplatesWorkbook(str(path), templateDB.FetchAllTemplatesForExport())
   convertSpreadsheet(str(path), templateDB)
   assert _content_for_title(templateDB, 'Zebra') == '<p>Hello ${x} &amp; y</p>'
   reparsed = EmailTemplate('Zebra', _content_for_title(templateDB, 'Zebra'))
   assert list(reparsed.fields) == ['x']
-  assert is_html_content(reparsed.content) is True
+  assert isHTMLContent(reparsed.content) is True
 
 
 def testExportThenImportPreservesHtmlTemplateBody(templateDB: TemplateDB, tmp_path: Path) -> None:
@@ -56,7 +56,7 @@ def testExportThenImportPreservesHtmlTemplateBody(templateDB: TemplateDB, tmp_pa
   t.metadata = [MetadataTag('t')]
   templateDB.AddTemplate(t)
   path = tmp_path / 'h.xlsx'
-  write_templates_workbook(str(path), templateDB.FetchAllTemplatesForExport())
+  writeTemplatesWorkbook(str(path), templateDB.FetchAllTemplatesForExport())
   convertSpreadsheet(str(path), templateDB)
   assert _content_for_title(templateDB, 'HtmlT') == body
   round_trip = EmailTemplate('x', _content_for_title(templateDB, 'HtmlT'))
@@ -73,7 +73,7 @@ def testImportPlainXlsxColumnBStoredWithoutExportWrapper(templateDB: TemplateDB,
   wb.save(path)
   convertSpreadsheet(str(path), templateDB)
   assert _content_for_title(templateDB, 'Legacy') == 'Line1\nLine2 ${id}'
-  assert is_html_content(_content_for_title(templateDB, 'Legacy')) is False
+  assert isHTMLContent(_content_for_title(templateDB, 'Legacy')) is False
   et = EmailTemplate('Legacy', _content_for_title(templateDB, 'Legacy'))
   assert et.fields == {'id': None}
 

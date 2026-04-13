@@ -20,7 +20,7 @@ from .Database import TemplateDB
 from .Dataclasses import EmailTemplate, MetadataTag
 from .SelectFile import selectFilePath
 from .Logging import LOGGER
-from .spreadsheet import read_template_rows
+from .spreadsheet import readTemplateRows
 
 
 def importTemplates(parent) -> bool:
@@ -46,14 +46,14 @@ def importTemplates(parent) -> bool:
   return success
 
 
-def appConvertSpreadsheet(xls_path, datadir, database) -> bool:
+def appConvertSpreadsheet(xlsPath, dataDir, database) -> bool:
   """appConvertSpreadsheet - Convert xlsx spreadsheet from within application."""
-  LOGGER.info(f'Selected file: {xls_path}')
-  LOGGER.info(f'Global data dir is: {datadir}')
+  LOGGER.info(f'Selected file: {xlsPath}')
+  LOGGER.info(f'Global data dir is: {dataDir}')
   LOGGER.info(f'Global database path is: {database}')
   db = TemplateDB()
 
-  return convertSpreadsheet(xls_path, db)
+  return convertSpreadsheet(xlsPath, db)
 
 
 # Define a class on the fly to assign the data to to make accessing it easier.
@@ -85,7 +85,7 @@ class XlatedRow:
     return f'{self.title}'
 
 
-def convertSpreadsheet(xlsx_path: str, db: TemplateDB | None = None) -> bool:
+def convertSpreadsheet(xlsxPath: str, db: TemplateDB | None = None) -> bool:
   """Read the first worksheet of an .xlsx file and upsert rows into the database."""
   if db is None:
     db = TemplateDB()
@@ -95,10 +95,10 @@ def convertSpreadsheet(xlsx_path: str, db: TemplateDB | None = None) -> bool:
   duplicateTitles: set[str] = set()
 
   LOGGER.info('Reading spreadsheet (first sheet, row 1 skipped as header)...')
-  raw_rows = read_template_rows(xlsx_path)
+  rawRows = readTemplateRows(xlsxPath)
 
-  for title, content, tag_parts in raw_rows:
-    row = XlatedRow(title=title, content=content, tags=tag_parts)
+  for title, content, tagParts in rawRows:
+    row = XlatedRow(title=title, content=content, tags=tagParts)
 
     if row.title in seenTitles:
       duplicateTitles.add(row.title)

@@ -17,49 +17,47 @@ from __future__ import annotations
 import argparse
 import sqlite3
 from dataclasses import dataclass, field
-from .spreadsheet import read_template_rows
+from .spreadsheet import readTemplateRows
 
 
-# Global
-# Setup the arg parser to import and parse arguments.
-parser = argparse.ArgumentParser()
+# Module-level script state; names follow public SNAKE_CASE convention.
+ARG_PARSER = argparse.ArgumentParser()
 
 
-parser.add_argument(
+ARG_PARSER.add_argument(
   "--ddl", "-s",
   default='emstencil/templates.sql',
   required=False,
   help="Specify path for ddl file to build the bdatabase."
 )
 
-parser.add_argument(
+ARG_PARSER.add_argument(
   "--database", "-d",
   default='data/templates.db',
   required=False,
   help="Specify path for database file."
 )
 
-parser.add_argument(
+ARG_PARSER.add_argument(
   "--xls", "-x",
   default="data/templates.xlsx",
   help="Location for templates in xlsx format to add to convert to database."
 )
 
-args = parser.parse_args()
+CLI_ARGS = ARG_PARSER.parse_args()
 
-# Define connection to database
 # TODO: Once TemplateDB object has write/add functionality need to re-write this module.
-database =  sqlite3.connect(args.database)
+DB_CONNECTION = sqlite3.connect(CLI_ARGS.database)
 
 def main():
   """Main - Xlate the spreadsheet into an object to be able to manipulate"""
   # Create the SQLite3 database from the DDL definition.
-  dbCursor = database.cursor()
-  with open(args.ddl) as fp:
+  dbCursor = DB_CONNECTION.cursor()
+  with open(CLI_ARGS.ddl) as fp:
     dbCursor.executescript(fp.read())
 
   # Convert the spreadsheet into the SQLite3 database.
-  convertSpreadsheet(args.xls)
+  convertSpreadsheet(CLI_ARGS.xls)
 
 
 # Define a class on the fly to assign the data to to make accessing it easier.
@@ -90,17 +88,17 @@ class XlatedRow:
     return f'{self.title}'
 
 
-def convertSpreadsheet(xls_path: str) -> None:
+def convertSpreadsheet(xlsPath: str) -> None:
   """Code for converting spreadsheet into SQLite3 Database."""
-  TemplateRows: list = []
+  templateRows: list = []
   tagsToCreate: set = set()
   TagIDs: dict = {}
 
-  for title, content, tag_parts in read_template_rows(xls_path):
-    row = XlatedRow(title=title, content=content, tags=tag_parts)
+  for title, content, tagParts in readTemplateRows(xlsPath):
+    row = XlatedRow(title=title, content=content, tags=tagParts)
 
     # Add the templates to the database, store their RowID. Add its tags to the set.
-    TemplateRows.append(addTemplateRow(row))
+    templateRows.append(addTemplateRow(row))
     tagsToCreate = tagsToCreate | set(row.tags)
 
   # Sort tags to be created, also converts set to list object.
@@ -115,11 +113,11 @@ def convertSpreadsheet(xls_path: str) -> None:
     TagIDs = {**TagIDs, tag: addTagRow(tag)}
 
   # Link everything together to build the templateTags table.
-  for tmplt in TemplateRows:
+  for tmplt in templateRows:
     for tag in tmplt.tags:
       addTemplateTagsRow(tmplt.rowID, TagIDs[tag] )
 
-  print(f'Number of templates added: {len(TemplateRows)}')
+  print(f'Number of templates added: {len(templateRows)}')
   print(f'Number of tags added: {len(TagIDs)}')
 
 
@@ -128,7 +126,7 @@ def clearTables() -> None:
      Helpful for re-converting the data when the spreadsheet is updated.
      Currently this is un-used since this rebuilds the DB from ddl every time"""
 
-  cursor = database.cursor()
+  cursor = DB_CONNECTION.cursor()
   cursor.execute("delete from templateTags")
   cursor.execute("delete from tags")
   cursor.execute("delete from templates")
@@ -137,7 +135,7 @@ def clearTables() -> None:
 def addTemplateRow(row: XlatedRow) -> XlatedRow | None:
   """Add Template content rows to the templates table in the database.
      Returns the row it just added updated with it's current rowID in the database."""
-  cursor = database.cursor()
+  cursor = DB_CONNECTION.cursor()
   cursor.execute(
     """
       insert into templates (title, content) values (?, ?)
@@ -152,7 +150,7 @@ def addTemplateRow(row: XlatedRow) -> XlatedRow | None:
 def addTagRow(tag: str) -> int | None:
   """Add Tag content rows to the tags table in the database.
      Returns the rowID for what it just added."""
-  cursor = database.cursor()
+  cursor = DB_CONNECTION.cursor()
   cursor.execute(
     """
       insert into tags (tag) values (?)
@@ -165,7 +163,7 @@ def addTagRow(tag: str) -> int | None:
 
 def addTemplateTagsRow(tmpltRowID: int, tagRowID: int) -> None:
   """Add records for tags associated with template items."""
-  cursor = database.cursor()
+  cursor = DB_CONNECTION.cursor()
   cursor.execute(
     """
       insert into templateTags (tmplt_uid, tag_uid) values (?, ?)
@@ -178,5 +176,5 @@ def addTemplateTagsRow(tmpltRowID: int, tagRowID: int) -> None:
 if __name__ == '__main__':
   main()
   # Commit the changes to the database and close the connection.
-  database.commit()
-  database.close()
+  DB_CONNECTION.commit()
+  DB_CONNECTION.close()

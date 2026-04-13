@@ -1,7 +1,7 @@
 """
  Program: Database singleton class for database management.
 
-    Name: Andrew Dixon            File: __init__.py
+    Name: Andrew Dixon            File: initialize.py
     Date: 6 Nov 2023
    Notes:
 
@@ -23,8 +23,8 @@ from .Logging import LOGGER
 from .Exceptions import DatabaseDDLSourceMissing
 
 
-def is_initilized() -> bool:
-  initilizeData()
+def isinitialized() -> bool:
+  initializeData()
   databaseFile = DATA_DIR.joinpath('templates.db')
 
   if not databaseFile.exists():
@@ -58,26 +58,26 @@ def getSchemaPath() -> Path:
   Return the proper path for the DDL file used to define the database.
   """
 
-  ddl_locations = {
+  ddlLocations = {
     'source': Path(__file__).parent / 'templates.sql',
     'frozen': Path(sys.argv[0]).parent / 'templates.sql',
   }
 
-  if ddl_locations['source'].exists():
+  if ddlLocations['source'].exists():
     # DDL is in the package directory and we are running from source.
-    base = ddl_locations['source']
+    base = ddlLocations['source']
     LOGGER.info(f'Returning DDL path for source state: {base}')
 
-  elif ddl_locations['frozen'].exists():
+  elif ddlLocations['frozen'].exists():
     # DDL exists at the base direcotry in a packaged method.
-    base = ddl_locations['frozen']
+    base = ddlLocations['frozen']
     LOGGER.info(f'Returning DDL path for frozen state: {base}')
 
   else:
     # The DDL wasn't in either locaton we expect.
     LOGGER.error('Could not find DDL file for database schema.')
     # Dump dictionary with a list comprehension to check the locations.
-    checked = ', '.join(f'{k}: {v}' for k, v in ddl_locations.items())
+    checked = ', '.join(f'{k}: {v}' for k, v in ddlLocations.items())
     raise DatabaseDDLSourceMissing(checked)
 
   return base
@@ -108,7 +108,7 @@ def createDatabase() -> bool:
   return DATABASE_FILE.exists()
 
 
-def initilizeData() -> bool:
+def initializeData() -> bool:
   """
   Function just in case we need to manually cause a rebuild by calling this script directly.
   """
@@ -127,4 +127,4 @@ def initilizeData() -> bool:
 
 
 if __name__ == '__main__':
-  is_initilized()
+  isinitialized()
