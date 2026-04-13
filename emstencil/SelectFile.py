@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 """
- Program: Find and select a file to be paseed elsewhere.
+ Program: Find and select a file to be passed elsewhere.
     Name: Andrew Dixon            File:   SelectFile.py
     Date: 27 Nov 2025
    Notes:
@@ -15,63 +15,39 @@
 
 from __future__ import annotations
 
-from PySide6.QtGui import QFontMetrics
-from PySide6.QtWidgets import QDialog, QFileDialog, QVBoxLayout, QHBoxLayout
-from PySide6.QtWidgets import QPushButton, QLabel, QLineEdit
+from collections.abc import Sequence
+
+from PySide6.QtWidgets import QFileDialog, QWidget
+
+_ALL_FILES = 'All Files (*)'
 
 
-class FileSelectionDialog(QDialog):
-  def __init__(self, parent=None):
-    super().__init__(parent)
-    self.setWindowTitle('Select a File')
-    self.selected_file = None
+def _qtFilterSegments(filters: Sequence[tuple[str, str]]) -> list[str]:
+  """Turn (label, glob) pairs into QFileDialog filter rows; trailing catch-all from _ALL_FILES."""
+  segments: list[str] = []
+  
+  for label, pattern in filters:
+    segments.append(f'{label} ({pattern})')
+  
+  segments.append(_ALL_FILES)
+  
+  return segments
 
-    # Widgets
-    self.label = QLabel('Choose a file to import:')
-    self.path_display = QLineEdit()
-    pathMetrics = QFontMetrics(self.path_display.font())
-    minLengthForData = pathMetrics.horizontalAdvance('M' * 35)
-    self.path_display.setMinimumWidth(minLengthForData)  # Enforce a good size for the path.
-    self.path_display.setReadOnly(True)
 
-    self.btn_browse = QPushButton('Browse...')
-    self.btn_ok = QPushButton('OK')
-    self.btn_cancel = QPushButton('Cancel')
+def selectFilePath(
+  parent: QWidget | None,
+  title: str,
+  filters: Sequence[tuple[str, str]],
+  startDir: str = '',
+) -> str | None:
+  """Open a native file dialog and return the chosen path, or None if canceled."""
 
-    # Layout
-    path_layout = QHBoxLayout()
-    path_layout.addWidget(self.path_display)
-    path_layout.addWidget(self.btn_browse)
+  fileName: str | None = None
+  _selectedFilter: str | None = None
 
-    button_layout = QHBoxLayout()
-    button_layout.addStretch()
-    button_layout.addWidget(self.btn_ok)
-    button_layout.addWidget(self.btn_cancel)
+  filterString: str = ';;'.join(_qtFilterSegments(filters))
+  fileName, _selectedFilter = QFileDialog.getOpenFileName(
+    parent, title, startDir, filterString
+  )
 
-    main_layout = QVBoxLayout()
-    main_layout.addWidget(self.label)
-    main_layout.addLayout(path_layout)
-    main_layout.addLayout(button_layout)
-
-    self.setLayout(main_layout)
-
-    # Connections
-    self.btn_browse.clicked.connect(self.openFileDialog)
-    self.btn_ok.clicked.connect(self.accept)
-    self.btn_cancel.clicked.connect(self.reject)
-
-  def openFileDialog(self) -> None:
-    file_name, _ = QFileDialog.getOpenFileName(
-      self, 'Select Template File', '', 'All Files (*);;Excel Files (*.xlsx)'
-    )
-    if file_name:
-      self.selected_file = file_name
-      self.path_display.setText(file_name)
-
-  def accept(self) -> None:
-    if self.selected_file:
-      super().accept()
-
-    else:
-      # Optional: disable silently, or tell user to pick a file
-      self.label.setText('Select a file before pressing OK!')
+  return fileName if fileName else None
