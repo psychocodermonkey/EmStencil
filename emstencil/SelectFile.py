@@ -47,7 +47,10 @@ def selectFilePath(
 
   filterString: str = ';;'.join(_qtFilterSegments(filters))
   fileName, _selectedFilter = QFileDialog.getOpenFileName(
-    parent, title, startDir, filterString
+    parent=parent, 
+    caption=title, 
+    dir=startDir, 
+    filter=filterString
   )
 
   return fileName if fileName else None

@@ -263,9 +263,9 @@ class FieldEntryDialog(QDialog):
     ]
 
     valueLength = clamp(
-      max(textFieldLengths) if textFieldLengths else keyLength,
-      15,
-      120,
+      n=max(textFieldLengths) if textFieldLengths else keyLength,
+      minn=15,
+      maxn=120,
     )
 
     metrics = QFontMetrics(QLineEdit().font())

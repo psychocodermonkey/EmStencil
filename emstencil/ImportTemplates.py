@@ -30,11 +30,12 @@ def importTemplates(parent) -> bool:
 
   success = False
 
-  filePath = selectFilePath(
-    parent,
-    'Select Template File',
-    (('Excel Files', '*.xlsx'),),
+  filePath: str | None = selectFilePath(
+    parent=parent,
+    title='Select Template File',
+    filters=(('Excel Files', '*.xlsx'),),
   )
+
   if filePath:
     success = appConvertSpreadsheet(filePath, DATA_DIR, DATABASE_FILE)
     LOGGER.info('Template import completed...')

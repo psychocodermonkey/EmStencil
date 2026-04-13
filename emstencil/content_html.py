@@ -23,10 +23,11 @@ from PySide6.QtGui import QTextDocument
 _TAG_RE = re.compile(r'</?[a-zA-Z][\w:-]*')
 
 _IMG_TAG_RE = re.compile(r'<img\b[^>]*>', re.IGNORECASE)
+
 # Catches data URLs left in plain text after HTML→text conversion (e.g. from src attributes).
 _STANDALONE_DATA_URL_RE = re.compile(
-  r'data:image/[\w+.-]+;base64,[A-Za-z0-9+/=]+',
-  re.IGNORECASE,
+  pattern=r'data:image/[\w+.-]+;base64,[A-Za-z0-9+/=]+',
+  flags=re.IGNORECASE,
 )
 
 
