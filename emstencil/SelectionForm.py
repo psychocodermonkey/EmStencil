@@ -17,6 +17,7 @@ from __future__ import annotations
 import base64
 import binascii
 import re
+from collections.abc import Callable
 
 from PySide6.QtCore import Qt, QMimeData
 from PySide6.QtGui import QClipboard, QFontMetrics, QImage, QKeySequence, QResizeEvent, QShortcut
@@ -26,7 +27,6 @@ from PySide6.QtWidgets import (
   QWidget,
   QHBoxLayout,
   QVBoxLayout,
-  QMainWindow,
 )
 from PySide6.QtWidgets import QPushButton, QTextEdit, QComboBox
 from .content_html import clipboardPlainTextFromMergedHTML, isHTMLContent
@@ -43,14 +43,21 @@ class TemplateSelector(QWidget):
   _SRC_ATTR_RE = re.compile(r'''src\s*=\s*(["'])(.*?)\1''', re.IGNORECASE | re.DOTALL)
   _DIM_ATTR_RE = re.compile(r'''\s(?:width|height)\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)''', re.IGNORECASE)
 
-  def __init__(self, templateList: list, metaTags: list, parent=None) -> None:
-    super(TemplateSelector, self).__init__()
+  def __init__(
+    self,
+    templateList: list,
+    metaTags: list,
+    parent: QWidget | None = None,
+    *,
+    onExitRequested: Callable[[], None] | None = None,
+  ) -> None:
+    super().__init__(parent)
     # Work fields and local variables for the main application.
     self.templateList: list[EmailTemplate] = templateList
     self.metaTags: list[MetadataTag] = metaTags
     self.clipboard: QClipboard = QApplication.clipboard()
     self.db = TemplateDB()
-    self.parent: QMainWindow | None = parent
+    self._onExitRequested = onExitRequested
 
     # Set basics for main application window.
     self.setWindowTitle('EmStencil - Templated email builder')
@@ -322,7 +329,11 @@ class TemplateSelector(QWidget):
     """Process the current selection, show the update window for the fields."""
     selectedEmailTemplate = self.templateComboBox.currentData()
     if len(selectedEmailTemplate.fields) > 0:
-      self.editScreen = FieldEntryDialog(selectedEmailTemplate, parent=self)
+      self.editScreen = FieldEntryDialog(
+        selectedEmailTemplate,
+        onTemplateApplied=self.updateTextArea,
+        parent=self,
+      )
       LOGGER.info('Displaying field entry dialog...')
       self.editScreen.show()
 
@@ -359,6 +370,7 @@ class TemplateSelector(QWidget):
   def exitClicked(self) -> None:
     """Close the form/application by triggering close from the parent."""
     LOGGER.info('Application close...')
-    self.parent.closeWindow()
+    if self._onExitRequested is not None:
+      self._onExitRequested()
 
   _PREVIEW_IMAGE_STYLE = 'max-width: 100%; height: auto;'

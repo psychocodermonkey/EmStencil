@@ -90,7 +90,9 @@ class EmStencil(QMainWindow):
 
     # Create instance of application widget and add to main window.
     # selectionForm = TemplateSelector(templateList, metaTags, parent=self)
-    self.setCentralWidget(loadTemplateSelector(self))
+    self.setCentralWidget(
+      loadTemplateSelector(self, onExitRequested=self.closeWindow)
+    )
     LOGGER.info('MainWindow initialized successfully.')
 
   def importTemplate(self) -> None:
@@ -108,7 +110,9 @@ class EmStencil(QMainWindow):
       oldWidget.deleteLater()
       LOGGER.info('Releasing old central widget.')
 
-    self.setCentralWidget(loadTemplateSelector(self))
+    self.setCentralWidget(
+      loadTemplateSelector(self, onExitRequested=self.closeWindow)
+    )
     LOGGER.info('New template selector loaded successfully.')
 
   def newTemplate(self) -> None:

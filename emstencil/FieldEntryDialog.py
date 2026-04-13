@@ -38,7 +38,6 @@ from PySide6.QtWidgets import (
   QPushButton,
   QVBoxLayout,
   QWidget,
-  QMainWindow,
 )
 from .Dataclasses import EmailTemplate
 from .Exceptions import TemplateKeyValueNull
@@ -53,7 +52,7 @@ def qimageToPngDataURL(img: QImage) -> str:
   buf = QBuffer(blob)
   buf.open(QIODevice.OpenModeFlag.WriteOnly)
 
-  if not img.save(buf, 'PNG'):
+  if not img.save(buf, 'PNG'): # type: ignore
     return ''
 
   encoded = base64.b64encode(blob.data()).decode('ascii')
@@ -90,7 +89,7 @@ class ImagePasteLineEdit(QLineEdit):
     menu.addAction('Paste', self._pasteAction)
     menu.addSeparator()
     menu.addAction('Select All', self.selectAll)
-    menu.exec(event.globalPos())
+    menu.exec(event.globalPos()) #type: ignore
 
   def _pasteAction(self) -> None:
     if not self._pasteClipboardImage():
@@ -238,10 +237,16 @@ class ImageFieldRow(QWidget):
 class FieldEntryDialog(QDialog):
   """Build dialog to get data for the fields in the field dictionary."""
 
-  def __init__(self, template: EmailTemplate, parent=None):
-    super().__init__()
+  def __init__(
+    self,
+    template: EmailTemplate,
+    *,
+    onTemplateApplied: Callable[[EmailTemplate], None],
+    parent: QWidget | None = None,
+  ) -> None:
+    super().__init__(parent)
     self.setWindowTitle('Fields available for template')
-    self.parent: QMainWindow | None = parent
+    self._onTemplateApplied = onTemplateApplied
     self.template: EmailTemplate = template
     self.dictionary: dict[str, str | int | None] = self.template.fields
     self.layout: QVBoxLayout = QVBoxLayout()
@@ -329,9 +334,9 @@ class FieldEntryDialog(QDialog):
 
     try:
       self.template.setFields(self.dictionary)
-      self.parent.updateTextArea(self.template)
+      self._onTemplateApplied(self.template)
 
     except TemplateKeyValueNull:
-      self.parent.updateTextArea(self.template)
+      self._onTemplateApplied(self.template)
 
     return

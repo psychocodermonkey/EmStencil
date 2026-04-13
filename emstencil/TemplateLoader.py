@@ -15,13 +15,19 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
+
 from emstencil import Database as emDB
 from emstencil import Dataclasses as emClasses
 from .SelectionForm import TemplateSelector
 from .Logging import LOGGER
 
 
-def loadTemplateSelector(parent=None) -> TemplateSelector:
+def loadTemplateSelector(
+  parent=None,
+  *,
+  onExitRequested: Callable[[], None] | None = None,
+) -> TemplateSelector:
   db = emDB.TemplateDB()
   templateList = db.FetchAllTemplates()
   templateList = list(map(db.FetchMetadataForTemplate, templateList))
@@ -41,4 +47,9 @@ def loadTemplateSelector(parent=None) -> TemplateSelector:
 
   LOGGER.info('Loading template selector form.')
 
-  return TemplateSelector(templateList, metaTags, parent=parent)
+  return TemplateSelector(
+    templateList,
+    metaTags,
+    parent=parent,
+    onExitRequested=onExitRequested,
+  )
