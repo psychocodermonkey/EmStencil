@@ -18,7 +18,7 @@ from dataclasses import dataclass, field
 from PySide6.QtWidgets import QMessageBox
 from .Database import TemplateDB
 from .Dataclasses import EmailTemplate, MetadataTag
-from .SelectFile import FileSelectionDialog
+from .SelectFile import selectFilePath
 from .Logging import LOGGER
 from .spreadsheet import read_template_rows
 
@@ -30,10 +30,13 @@ def importTemplates(parent) -> bool:
 
   success = False
 
-  dialog = FileSelectionDialog(parent)
-  if dialog.exec():  # User pressed OK
-    file_path = dialog.selected_file
-    success = appConvertSpreadsheet(file_path, DATA_DIR, DATABASE_FILE)
+  filePath = selectFilePath(
+    parent,
+    'Select Template File',
+    (('Excel Files', '*.xlsx'),),
+  )
+  if filePath:
+    success = appConvertSpreadsheet(filePath, DATA_DIR, DATABASE_FILE)
     LOGGER.info('Template import completed...')
 
   else:
